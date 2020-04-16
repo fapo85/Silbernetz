@@ -4,6 +4,7 @@ using Microsoft.Extensions.Logging;
 using Silbernetz.Actions;
 using Silbernetz.Models;
 using System;
+using System.Linq;
 using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
@@ -44,6 +45,11 @@ namespace Silbernetz.Controllers
                     };
                     //Jetzt nur noch Speichern :-D
                 }
+            }
+            else
+            {
+                var errors = ModelState.Values.SelectMany(v => v.Errors);
+                Console.WriteLine(JsonSerializer.Serialize(errors));
             }
             return Ok();
         }
