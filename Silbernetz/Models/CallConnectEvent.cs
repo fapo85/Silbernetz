@@ -84,7 +84,7 @@ namespace Silbernetz.Models
         /// Gesprächsdauer ausgehend
         /// </summary>
         [JsonPropertyName("duration_out")]
-        public string DurationOut { get; set; }
+        public object DurationOut { get; set; }
 
         [JsonPropertyName("successfully")]
         public string Successfully { get; set; }
