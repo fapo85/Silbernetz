@@ -33,7 +33,7 @@ namespace Silbernetz.Controllers
             if (ModelState.IsValid)
             {
                 Console.WriteLine(JsonSerializer.Serialize<CallConnectEvent>(callevent));
-                if (callevent.Event == EventType.connect)
+                if (callevent.Event.Contains("connect"))
                 {
                     LiveData livedata = await inoplaClient.GetLiveDataAsync(true);
                     Anruf anruf = new Anruf()
@@ -49,7 +49,7 @@ namespace Silbernetz.Controllers
             }
             else
             {
-                Console.WriteLine("NotValid");
+                Console.WriteLine("ModelState NotValid:");
                 var errors = ModelState.Values.SelectMany(v => v.Errors);
                 Console.WriteLine(JsonSerializer.Serialize(errors));
             }

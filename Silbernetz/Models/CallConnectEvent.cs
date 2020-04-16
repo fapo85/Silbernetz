@@ -17,7 +17,7 @@ namespace Silbernetz.Models
         /// Event Typo
         /// </summary>
         [JsonPropertyName("event")]
-        public EventType Event { get; set; }
+        public string Event { get; set; }
 
         [JsonPropertyName("kid")]
         public string Kid { get; set; }
