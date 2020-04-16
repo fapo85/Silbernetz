@@ -24,7 +24,7 @@ namespace Silbernetz.Controllers
             return Stats.FromLiveData(await inoplaClient.GetLiveDataAsync());
         }
 
-        [HttpGet("/Api/PushCall")]
+        [HttpPost("/Api/PushCall")]
         public async Task<IActionResult> PushCall(CallConnectEvent callevent)
         {
             Console.WriteLine(JsonSerializer.Serialize<CallConnectEvent>(callevent));
