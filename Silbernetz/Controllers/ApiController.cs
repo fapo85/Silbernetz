@@ -4,6 +4,7 @@ using Microsoft.Extensions.Logging;
 using Silbernetz.Actions;
 using Silbernetz.Models;
 using System;
+using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
 
@@ -25,10 +26,16 @@ namespace Silbernetz.Controllers
         }
 
         [HttpPost("/Api/PushCall")]
-        public async Task<IActionResult> PushCall([FromBody]CallConnectEvent callevent)
+        public async Task<IActionResult> PushCall(string eventstring)
         {
-            Console.WriteLine(JsonSerializer.Serialize<CallConnectEvent>(callevent));
-            if(callevent.Event == EventType.connect)
+            StringBuilder sb = new StringBuilder();
+            sb.AppendLine("Input String:");
+            sb.AppendLine(eventstring);
+            CallConnectEvent callevent = JsonSerializer.Deserialize<CallConnectEvent>(eventstring);
+            sb.AppendLine("Object:");
+            sb.AppendLine(JsonSerializer.Serialize<CallConnectEvent>(callevent));
+            Console.WriteLine(sb.ToString());
+            if (callevent.Event == EventType.connect)
             {
                 LiveData livedata = await inoplaClient.GetLiveDataAsync(true);
                 Anruf anruf = new Anruf()
