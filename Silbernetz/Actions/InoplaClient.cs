@@ -24,16 +24,6 @@ namespace Silbernetz.Actions
             this.ApiId = secrets.InoplaApiId;
             this.ApiKey = secrets.InoplaApiKey;
             this.hubContext = hubContext;
-            new Task(() =>
-            {
-                Console.WriteLine("Start Working Task");
-                while (true)
-                {
-                    Task.Delay(TimeSpan.FromSeconds(60)).Wait();
-                    Console.WriteLine("Ask Data");
-                    StartRenewAsync();
-                }
-            }).Start();
         }
         private string ApiUrl(String enpoint) => $"https://api.inopla.de/v1000/json/{ApiId}/{ApiKey}/{enpoint}";
         public void StartRenewAsync() => new Task(()=> GetLiveData(true)).Start();
@@ -68,7 +58,6 @@ namespace Silbernetz.Actions
                 Stats stats = Stats.FromLiveData(newData);
                 if (oldData == null || oldData.AmTelefon != stats.AmTelefon || oldData.Angemeldet != stats.Angemeldet || oldData.Benutzer != stats.Benutzer)
                 {
-                    Console.WriteLine($"Versende neue date: angemeldet {stats.Angemeldet} von {stats.Benutzer} am Telefonieren: {stats.AmTelefon}");
                     hubContext.Clients.All.SendAsync("stats", stats);
                 }
             }).Start();

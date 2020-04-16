@@ -28,10 +28,20 @@ namespace Silbernetz.Controllers
         public async Task<IActionResult> PushCall(CallConnectEvent callevent)
         {
             Console.WriteLine(JsonSerializer.Serialize<CallConnectEvent>(callevent));
-            //if(callevent.Event == EventType.connect)
-            //{
-
-            //}
+            if(callevent.Event == EventType.connect)
+            {
+                LiveData livedata = await inoplaClient.GetLiveDataAsync(true);
+                Anruf anruf = new Anruf()
+                {
+                    Uuid = callevent.Uuid,
+                    TimeStamp = callevent.Timestamp,
+                    Benutzer = livedata.Benutzer,
+                    Angemeldet = livedata.Angemeldet,
+                    AmTelefon = livedata.AmTelefon
+                };
+                Console.WriteLine(JsonSerializer.Serialize<CallConnectEvent>(callevent));
+                //Jetzt nur noch Speichern :-D
+            }
             return Ok();
         }
 
