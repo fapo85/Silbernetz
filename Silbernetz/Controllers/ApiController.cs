@@ -26,28 +26,35 @@ namespace Silbernetz.Controllers
         }
 
         [HttpPost("/Api/PushCall")]
-        public async Task<IActionResult> PushCall(string eventstring)
+        public async Task<IActionResult> PushCall([FromBody]string eventstring)
         {
             StringBuilder sb = new StringBuilder();
             sb.AppendLine("Input String:");
             sb.AppendLine(eventstring);
-            CallConnectEvent callevent = JsonSerializer.Deserialize<CallConnectEvent>(eventstring);
-            sb.AppendLine("Object:");
-            sb.AppendLine(JsonSerializer.Serialize<CallConnectEvent>(callevent));
-            Console.WriteLine(sb.ToString());
-            if (callevent.Event == EventType.connect)
+            if (!string.IsNullOrEmpty(eventstring))
             {
-                LiveData livedata = await inoplaClient.GetLiveDataAsync(true);
-                Anruf anruf = new Anruf()
+                CallConnectEvent callevent = JsonSerializer.Deserialize<CallConnectEvent>(eventstring);
+                sb.AppendLine("Object:");
+                sb.AppendLine(JsonSerializer.Serialize<CallConnectEvent>(callevent));
+                Console.WriteLine(sb.ToString());
+                if (callevent.Event == EventType.connect)
                 {
-                    Uuid = callevent.Uuid,
-                    TimeStamp = callevent.Timestamp,
-                    Benutzer = livedata.Benutzer,
-                    Angemeldet = livedata.Angemeldet,
-                    AmTelefon = livedata.AmTelefon
-                };
-                Console.WriteLine(JsonSerializer.Serialize<CallConnectEvent>(callevent));
-                //Jetzt nur noch Speichern :-D
+                    LiveData livedata = await inoplaClient.GetLiveDataAsync(true);
+                    Anruf anruf = new Anruf()
+                    {
+                        Uuid = callevent.Uuid,
+                        TimeStamp = callevent.Timestamp,
+                        Benutzer = livedata.Benutzer,
+                        Angemeldet = livedata.Angemeldet,
+                        AmTelefon = livedata.AmTelefon
+                    };
+                    //Jetzt nur noch Speichern :-D
+                }
+            }
+            else
+            {
+                sb.AppendLine("is null or empty");
+                Console.WriteLine(sb.ToString());
             }
             return Ok();
         }
