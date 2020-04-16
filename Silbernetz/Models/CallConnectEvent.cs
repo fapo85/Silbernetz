@@ -98,7 +98,7 @@ namespace Silbernetz.Models
         public object SessionId { get; set; }
 
         [JsonPropertyName("timestamp")]
-        public DateTime Timestamp { get; set; }
+        public string Timestamp { get; set; }
     }
     public enum EventType
     {

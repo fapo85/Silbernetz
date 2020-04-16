@@ -39,7 +39,7 @@ namespace Silbernetz.Controllers
                     Anruf anruf = new Anruf()
                     {
                         Uuid = callevent.Uuid,
-                        TimeStamp = callevent.Timestamp,
+                        TimeStamp = DateTime.Now,
                         Benutzer = livedata.Benutzer,
                         Angemeldet = livedata.Angemeldet,
                         AmTelefon = livedata.AmTelefon
