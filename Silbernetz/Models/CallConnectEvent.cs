@@ -22,8 +22,8 @@ namespace Silbernetz.Models
         [JsonPropertyName("kid")]
         public string Kid { get; set; }
 
-        [JsonPropertyName("cdr_id")]
-        public string CdrId { get; set; }
+        //[JsonPropertyName("cdr_id")]
+        //public string CdrId { get; set; }
         /// <summary>
         /// Aktuelle Routing ID
         /// </summary>
