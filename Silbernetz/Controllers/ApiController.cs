@@ -29,6 +29,7 @@ namespace Silbernetz.Controllers
         [HttpPost("/Api/PushCall")]
         public async Task<IActionResult> PushCall([FromBody]CallConnectEvent callevent)
         {
+            Console.WriteLine("Call");
             if (ModelState.IsValid)
             {
                 Console.WriteLine(JsonSerializer.Serialize<CallConnectEvent>(callevent));
@@ -48,6 +49,7 @@ namespace Silbernetz.Controllers
             }
             else
             {
+                Console.WriteLine("NotValid");
                 var errors = ModelState.Values.SelectMany(v => v.Errors);
                 Console.WriteLine(JsonSerializer.Serialize(errors));
             }
