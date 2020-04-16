@@ -25,7 +25,7 @@ namespace Silbernetz.Controllers
         }
 
         [HttpPost("/Api/PushCall")]
-        public async Task<IActionResult> PushCall(CallConnectEvent callevent)
+        public async Task<IActionResult> PushCall([FromBody]CallConnectEvent callevent)
         {
             Console.WriteLine(JsonSerializer.Serialize<CallConnectEvent>(callevent));
             if(callevent.Event == EventType.connect)
