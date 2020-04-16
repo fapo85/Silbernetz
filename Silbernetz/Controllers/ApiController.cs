@@ -26,17 +26,11 @@ namespace Silbernetz.Controllers
         }
 
         [HttpPost("/Api/PushCall")]
-        public async Task<IActionResult> PushCall([FromBody]string eventstring)
+        public async Task<IActionResult> PushCall([FromBody]CallConnectEvent callevent)
         {
-            StringBuilder sb = new StringBuilder();
-            sb.AppendLine("Input String:");
-            sb.AppendLine(eventstring);
-            if (!string.IsNullOrEmpty(eventstring))
+            if (ModelState.IsValid)
             {
-                CallConnectEvent callevent = JsonSerializer.Deserialize<CallConnectEvent>(eventstring);
-                sb.AppendLine("Object:");
-                sb.AppendLine(JsonSerializer.Serialize<CallConnectEvent>(callevent));
-                Console.WriteLine(sb.ToString());
+                Console.WriteLine(JsonSerializer.Serialize<CallConnectEvent>(callevent));
                 if (callevent.Event == EventType.connect)
                 {
                     LiveData livedata = await inoplaClient.GetLiveDataAsync(true);
@@ -50,11 +44,6 @@ namespace Silbernetz.Controllers
                     };
                     //Jetzt nur noch Speichern :-D
                 }
-            }
-            else
-            {
-                sb.AppendLine("is null or empty");
-                Console.WriteLine(sb.ToString());
             }
             return Ok();
         }
