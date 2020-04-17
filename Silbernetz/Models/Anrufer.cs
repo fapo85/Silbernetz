@@ -17,7 +17,7 @@ namespace Silbernetz.Models
         public int GesamtDauer {
             get {
                 long dauer = 0;
-                foreach(CallEvents[] ev in Anrufe.Values)
+                foreach(List<CallEvents> ev in Anrufe.Values)
                 {
                     CallEvents Beginn = ev.Where(e => e.Event == EventType.connect).FirstOrDefault();
                     CallEvents Ende = ev.Where(e => e.Event == EventType.hangup).FirstOrDefault();
@@ -31,6 +31,6 @@ namespace Silbernetz.Models
                 return (int)(dauer / TimeSpan.TicksPerSecond);
             }
         }
-        public Dictionary<Guid, CallEvents[]> Anrufe { get; set; } = new Dictionary<Guid, CallEvents[]>();
+        public Dictionary<Guid, List<CallEvents>> Anrufe { get; set; } = new Dictionary<Guid, List<CallEvents>>();
     }
 }
