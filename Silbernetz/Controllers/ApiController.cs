@@ -5,6 +5,7 @@ using Silbernetz.Actions;
 using Silbernetz.Database;
 using Silbernetz.Models;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Text.Json;
@@ -28,17 +29,22 @@ namespace Silbernetz.Controllers
         {
             return Stats.FromLiveData(await inoplaClient.GetLiveDataAsync());
         }
+        [HttpGet("/Api/Anrufe")]
+        public IEnumerable<Anrufer> AnrufFromToday()
+        {
+            return database.AnrufFromToday();
+        }
 
         [HttpPost("/Api/PushCall")]
         public async Task<IActionResult> PushCall([FromBody]CallConnectEvent callevent)
         {
             if (ModelState.IsValid)
             {
-                Anruf anruf = database.AddEventToAnruf(callevent.Uuid, callevent.Caller, new CallEvents(callevent));
+                Anruf anruf = database.AnrufAddEvent(callevent.Uuid, callevent.Caller, new CallEvents(callevent));
                 if (callevent.Event.Contains("connect"))
                 {
                     LiveData livedata = await inoplaClient.GetLiveDataAsync(true);
-                    database.AddStats(anruf, Stats.FromLiveData(livedata));
+                    database.AddStatsToAnruf(anruf, Stats.FromLiveData(livedata));
                 }
                 else if(callevent.Event.Contains("hangup"))
                 {
