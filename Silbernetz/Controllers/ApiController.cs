@@ -34,6 +34,16 @@ namespace Silbernetz.Controllers
         {
             return database.AnrufFromToday();
         }
+        [HttpGet("/Api/Auslastung/")]
+        public IEnumerable<Stats> Auslastung()
+        {
+            return Auslastung(7);
+        }
+        [HttpGet("/Api/Auslastung/{tage}")]
+        public IEnumerable<Stats> Auslastung(int tage)
+        {
+            return database.AnrufStatisitk(DateTime.Today.AddDays(-1 * tage));
+        }
 
         [HttpPost("/Api/PushCall")]
         public async Task<IActionResult> PushCall([FromBody]CallConnectEvent callevent)
