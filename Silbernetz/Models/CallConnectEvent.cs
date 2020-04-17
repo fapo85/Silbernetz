@@ -79,7 +79,7 @@ namespace Silbernetz.Models
         /// Gesprächsdauer eingehend
         /// </summary>
         [JsonPropertyName("duration_in")]
-        public string DurationIn { get; set; }
+        public object DurationIn { get; set; }
         /// <summary>
         /// Gesprächsdauer ausgehend
         /// </summary>
@@ -98,7 +98,7 @@ namespace Silbernetz.Models
         public object SessionId { get; set; }
 
         [JsonPropertyName("timestamp")]
-        public string Timestamp { get; set; }
+        public object Timestamp { get; set; }
     }
     public enum EventType
     {
