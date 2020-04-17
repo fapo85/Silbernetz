@@ -1,0 +1,7 @@
+<div class="ui middle aligned selection divided list">
+  <div class="content item" *ngFor="let anrufer of Data">
+    <div class="header">{{anrufer.telnummer}}
+      <a><i class="icon trash right"></i></a></div>
+  <div class="description right">Anrufe: {{ anrufer.anzahl }} Dauer: {{ CalcGesamtDauer(anrufer.gesamtdauer) }}</div>
+  </div>
+</div>

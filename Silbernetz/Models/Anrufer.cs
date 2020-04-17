@@ -2,18 +2,22 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 
 namespace Silbernetz.Models
 {
     public class Anrufer
     {
+        [JsonPropertyName("telnummer")]
         public string TelNummer { get; set; }
+        [JsonPropertyName("anzahl")]
         public int Anzahl {
             get {
                 return Anrufe.Count;
             }
         }
+        [JsonPropertyName("gesamtdauer")]
         public int GesamtDauer {
             get {
                 long dauer = 0;
@@ -31,6 +35,7 @@ namespace Silbernetz.Models
                 return (int)(dauer / TimeSpan.TicksPerSecond);
             }
         }
+        [JsonPropertyName("anrufe")]
         public List<AnrufExport> Anrufe { get; set; } = new List<AnrufExport>();
     }
     public class AnrufExport

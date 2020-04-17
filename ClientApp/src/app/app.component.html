@@ -3,10 +3,16 @@
   <div class="item">
     <div class="header">General</div>
     <div class="menu">
-      <a class="item">
+      <a class="item" [routerLink] routerLinkActive="active" routerLink="dashboard">
         <div>
           <i class="icon tachometer alternate"></i>
           Dashboard
+        </div>
+      </a>
+      <a class="item" routerLinkActive="active" routerLink="calltoday">
+        <div>
+          <i class="icon phone alternate"></i>
+          Anrufe Heute
         </div>
       </a>
     </div>
@@ -31,7 +37,7 @@
       Charts
     </div>
   </a>
-
+  --
   <a class="item">
     <div>
       <i class="icon lightbulb"></i>

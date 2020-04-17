@@ -1,22 +1,25 @@
-import { Component, AfterViewInit, ChangeDetectorRef } from '@angular/core';
+import { Component, AfterViewInit, OnDestroy, ChangeDetectorRef } from '@angular/core';
 import { SignalRService } from '../services/signal-r.service';
 import { Chart } from 'chart.js';
 import { Stats } from '../Models/stats';
-import { map } from 'rxjs/operators';
-
+import { Subscription } from 'rxjs';
 
 @Component({
   selector: 'sn-dashboard',
   templateUrl: './dashboard.component.html',
   styleUrls: ['./dashboard.component.scss']
 })
-export class DashboardComponent implements AfterViewInit {
+export class DashboardComponent implements AfterViewInit, OnDestroy {
   chart = [];
   Datums = [];
   Anrufer = [];
   Angemeldet = [];
+  subscription: Subscription;
   constructor(private signal: SignalRService,
               private cdRef: ChangeDetectorRef) { }
+  ngOnDestroy(): void {
+    this.subscription.unsubscribe();
+  }
 
   ngAfterViewInit(): void {
     // this.signal.dailyForecast()
@@ -31,7 +34,7 @@ export class DashboardComponent implements AfterViewInit {
     //       this.weatherDates.push(jsdate.toLocaleTimeString('en', { year: 'numeric', month: 'short', day: 'numeric' }))
     //   });
     // });
-    this.signal.AlleSub.subscribe((res: Stats[]) => {
+    this.subscription = this.signal.AlleSub.subscribe((res: Stats[]) => {
       const format = new Intl.DateTimeFormat('de',{weekday: 'long', hour: '2-digit', minute: '2-digit'});
       this.Datums = [];
       this.Anrufer = [];
@@ -73,8 +76,7 @@ export class DashboardComponent implements AfterViewInit {
           }
         }
     });
-    this.cdRef.detectChanges();
-
+      this.cdRef.detectChanges();
   });
   }
 }

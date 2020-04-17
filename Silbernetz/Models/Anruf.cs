@@ -16,7 +16,9 @@ namespace Silbernetz.Models
     }
     public class CallEvents
     {
+        [JsonPropertyName("timestamp")]
         public DateTime TimeStamp { get; set; }
+        [JsonPropertyName("event")]
         public EventType Event { get; set; }
         public CallEvents() { }
         public CallEvents(CallConnectEvent eventSource)
