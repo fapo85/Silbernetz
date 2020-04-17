@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using Silbernetz.Actions;
+using Silbernetz.Database;
 using Silbernetz.Models;
 using System;
 using System.Linq;
@@ -14,9 +15,11 @@ namespace Silbernetz.Controllers
     public class ApiController : Controller
     {
         private readonly InoplaClient inoplaClient;
+        private readonly AnrufSafe database = new AnrufSafe();
         public ApiController(InoplaClient inoplaClient)
         {
             this.inoplaClient = inoplaClient;
+            
         }
 
 
@@ -29,23 +32,19 @@ namespace Silbernetz.Controllers
         [HttpPost("/Api/PushCall")]
         public async Task<IActionResult> PushCall([FromBody]CallConnectEvent callevent)
         {
-            Console.WriteLine("Call");
             if (ModelState.IsValid)
             {
-                Console.WriteLine(JsonSerializer.Serialize<CallConnectEvent>(callevent));
+                Anruf anruf = database.AddEventToAnruf(callevent.Uuid, callevent.Caller, new CallEvents(callevent));
                 if (callevent.Event.Contains("connect"))
                 {
                     LiveData livedata = await inoplaClient.GetLiveDataAsync(true);
-                    Anruf anruf = new Anruf()
-                    {
-                        Uuid = callevent.Uuid,
-                        TimeStamp = DateTime.Now,
-                        Benutzer = livedata.Benutzer,
-                        Angemeldet = livedata.Angemeldet,
-                        AmTelefon = livedata.AmTelefon
-                    };
-                    //Jetzt nur noch Speichern :-D
+                    database.AddStats(anruf, Stats.FromLiveData(livedata));
                 }
+                else if(callevent.Event.Contains("hangup"))
+                {
+                    inoplaClient.StartRenewAsync();
+                }
+                Console.WriteLine(JsonSerializer.Serialize<Anruf>(anruf));
             }
             else
             {

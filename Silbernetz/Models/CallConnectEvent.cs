@@ -87,7 +87,7 @@ namespace Silbernetz.Models
         public object DurationOut { get; set; }
 
         [JsonPropertyName("successfully")]
-        public string Successfully { get; set; }
+        public object Successfully { get; set; }
         /// <summary>
         /// Datum und Uhrzeit des Anrufes
         /// </summary>
