@@ -17,10 +17,10 @@ namespace Silbernetz.Models
         public int GesamtDauer {
             get {
                 long dauer = 0;
-                foreach(List<CallEvents> ev in Anrufe.Values)
+                foreach(AnrufExport ae in Anrufe)
                 {
-                    CallEvents Beginn = ev.Where(e => e.Event == EventType.connect).FirstOrDefault();
-                    CallEvents Ende = ev.Where(e => e.Event == EventType.hangup).FirstOrDefault();
+                    CallEvents Beginn = ae.events.Where(e => e.Event == EventType.connect).FirstOrDefault();
+                    CallEvents Ende = ae.events.Where(e => e.Event == EventType.hangup).FirstOrDefault();
                     if(Beginn != null)
                     {
                         DateTime tsBeginn = Beginn.TimeStamp;
@@ -31,6 +31,16 @@ namespace Silbernetz.Models
                 return (int)(dauer / TimeSpan.TicksPerSecond);
             }
         }
-        public Dictionary<Guid, List<CallEvents>> Anrufe { get; set; } = new Dictionary<Guid, List<CallEvents>>();
+        public List<AnrufExport> Anrufe { get; set; } = new List<AnrufExport>();
+    }
+    public class AnrufExport
+    {
+        public Guid guid { get; set; }
+        public List<CallEvents> events { get; set; }
+        public AnrufExport(Guid guid, List<CallEvents> events)
+        {
+            this.guid = guid;
+            this.events = events;
+        }
     }
 }

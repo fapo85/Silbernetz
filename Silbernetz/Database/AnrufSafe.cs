@@ -52,7 +52,7 @@ namespace Silbernetz.Database
                     anrufer.TelNummer = itm.TelNummer;
                     ret.Add(itm.TelNummer, anrufer);
                 }
-                anrufer.Anrufe.Add(itm.Uuid, itm.Events);
+                anrufer.Anrufe.Add(new AnrufExport(itm.Uuid, itm.Events));
             }
             return ret.Values;
         }
