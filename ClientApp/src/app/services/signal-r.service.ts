@@ -5,7 +5,6 @@ import { BroadcastService } from '@azure/msal-angular';
 import { Stats } from '../Models/stats';
 import { environment } from 'src/environments/environment';
 import { Anrufer } from '../Models/anrufer';
-import { CallEvents } from '../Models/call-events';
 import { AnrufExport } from '../Models/anruf-export';
 import { WaitTimeProp } from '../Models/wait-time-prop';
 
