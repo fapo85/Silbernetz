@@ -1,11 +1,13 @@
 import { Injectable } from '@angular/core';
 import * as signalR from '@aspnet/signalr';
 import { BehaviorSubject, Observable } from 'rxjs';
+import { BroadcastService } from '@azure/msal-angular';
 import { Stats } from '../Models/stats';
 import { environment } from 'src/environments/environment';
 import { Anrufer } from '../Models/anrufer';
 import { CallEvents } from '../Models/call-events';
 import { AnrufExport } from '../Models/anruf-export';
+import { WaitTimeProp } from '../Models/wait-time-prop';
 
 @Injectable({
   providedIn: 'root'
@@ -14,22 +16,28 @@ export class SignalRService{
   private hubConnection: signalR.HubConnection;
   anruferHeute: BehaviorSubject<Anrufer[]>;
   neusteSub = new BehaviorSubject<Stats>(Stats.GetEmpty());
-  AlleSub = new BehaviorSubject<Stats[]>([]);
+  AlleSub = new BehaviorSubject<WaitTimeProp[]>([]);
+  private accessToken = '';
   constructor() {
     this.startConnection();
-    this.AddListener();
+  }
+  public SetAcessToken(token: string){
+    this.accessToken = token;
+    this.hubConnection.stop();
+    setTimeout(() => this.startConnection(), 1);
   }
   public startConnection = () => {
     if (environment.production){
       this.hubConnection = new signalR.HubConnectionBuilder()
-      .withUrl('/Hub')
+      .withUrl('/Hub', { accessTokenFactory: () => this.accessToken })
       .build();
     }else{
       this.hubConnection = new signalR.HubConnectionBuilder()
-                              .withUrl('http://localhost:5000/Hub')
-                              .build();
+      .withUrl('http://localhost:5000/Hub', { accessTokenFactory: () => this.accessToken })
+      .build();
     }
 
+    this.AddListener();
     this.hubConnection
       .start()
       .then(() => console.log('Connection started'))
@@ -42,27 +50,25 @@ export class SignalRService{
       if (data.timestamp.getTime() > this.neusteSub.value.timestamp.getTime()){
         this.neusteSub.next(data);
       }
-      this.AlleSub.next([...this.AlleSub.value, data]);
+      this.AlleSub.next([...this.AlleSub.value.filter(itm => (itm as Stats).angemeldet === undefined), data]);
       if(this.anruferHeute){
         this.HoleAnruferHeute();
       }
     });
-    this.hubConnection.on('manystats', (data: Stats[]) => {
-      data.forEach((itm: Stats) => itm.timestamp = new Date(itm.timestamp));
+    this.hubConnection.on('manystats', (data: WaitTimeProp[]) => {
+      data.forEach((itm: WaitTimeProp) => itm.timestamp = new Date(itm.timestamp));
       this.AlleSub.next(data);
     });
   }
   private HoleAnruferHeute(){
     //Warten falls noch nicht Verbunden
     if (this.hubConnection.state !== signalR.HubConnectionState.Connected){
-      setTimeout(() => this.HoleAnruferHeute(), 10);
+      setTimeout(() => this.HoleAnruferHeute(), 20);
     } else {
       this.hubConnection.invoke('AnrufFromToday').then((data: Anrufer[]) => {
         data.forEach((anrufer: Anrufer) => {
           anrufer.anrufe.forEach((anruf: AnrufExport) => {
-            anruf.events.forEach((event: CallEvents) => {
-              event.timestamp = new Date(event.timestamp);
-            });
+            anruf.timestamp = new Date(anruf.timestamp);
           });
           this.anruferHeute.next(data);
         });
@@ -72,7 +78,7 @@ export class SignalRService{
   public GetStats(): Observable<Stats>{
     return this.neusteSub;
   }
-  public GetAllStats(): Observable<Stats[]>{
+  public GetAllStats(): Observable<WaitTimeProp[]>{
     return this.AlleSub;
   }
   public GetAnruferHeute(): Observable<Anrufer[]> {

@@ -1,6 +1,12 @@
-import { CallEvents } from './call-events';
 
 export class AnrufExport {
-  guid: string;
-  events: CallEvents[];
+  id: string;
+  telnummer: string;
+  service: string;
+  timestamp: Date;
+  inbound: number;
+  outbound: number;
+  wait: number;
+  target: number;
+  lauftnoch: boolean;
 }

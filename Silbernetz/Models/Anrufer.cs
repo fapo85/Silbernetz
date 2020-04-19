@@ -18,34 +18,17 @@ namespace Silbernetz.Models
             }
         }
         [JsonPropertyName("gesamtdauer")]
-        public int GesamtDauer {
+        public uint GesamtDauer {
             get {
-                long dauer = 0;
-                foreach(AnrufExport ae in Anrufe)
+                uint dauer = 0;
+                foreach(Anruf ae in Anrufe)
                 {
-                    CallEvents Beginn = ae.events.Where(e => e.Event == EventType.connect).FirstOrDefault();
-                    CallEvents Ende = ae.events.Where(e => e.Event == EventType.hangup).FirstOrDefault();
-                    if(Beginn != null)
-                    {
-                        DateTime tsBeginn = Beginn.TimeStamp;
-                        DateTime tsEnde = Ende?.TimeStamp ?? DateTime.Now;
-                        dauer += (tsEnde.Ticks - tsBeginn.Ticks);
-                    }
+                    dauer += ae.OutBound;
                 }
-                return (int)(dauer / TimeSpan.TicksPerSecond);
+                return dauer;
             }
         }
         [JsonPropertyName("anrufe")]
-        public List<AnrufExport> Anrufe { get; set; } = new List<AnrufExport>();
-    }
-    public class AnrufExport
-    {
-        public Guid guid { get; set; }
-        public List<CallEvents> events { get; set; }
-        public AnrufExport(Guid guid, List<CallEvents> events)
-        {
-            this.guid = guid;
-            this.events = events;
-        }
+        public List<Anruf> Anrufe { get; set; } = new List<Anruf>();
     }
 }

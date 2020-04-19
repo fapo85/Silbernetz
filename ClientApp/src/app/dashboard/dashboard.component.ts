@@ -3,6 +3,7 @@ import { SignalRService } from '../services/signal-r.service';
 import { Chart } from 'chart.js';
 import { Stats } from '../Models/stats';
 import { Subscription } from 'rxjs';
+import { WaitTimeProp } from '../Models/wait-time-prop';
 
 @Component({
   selector: 'sn-dashboard',
@@ -12,37 +13,44 @@ import { Subscription } from 'rxjs';
 export class DashboardComponent implements AfterViewInit, OnDestroy {
   chart = [];
   Datums = [];
-  Anrufer = [];
-  Angemeldet = [];
-  subscription: Subscription;
+  // Anrufer = [];
+  WarteZeit = [];
+  AktuellAmTelefonCl: string;
+  AktuellAmTelefonNR: number;
+  Allesubscription: Subscription;
+  Nowsubscription: Subscription;
   constructor(private signal: SignalRService,
               private cdRef: ChangeDetectorRef) { }
   ngOnDestroy(): void {
-    this.subscription.unsubscribe();
+    this.Allesubscription.unsubscribe();
+    this.Nowsubscription.unsubscribe();
   }
 
   ngAfterViewInit(): void {
-    // this.signal.dailyForecast()
-    // .subscribe(res => {
-    //   this.temp_max = res['list'].map(res => res.main.temp_max);
-    //   this.temp_min = res['list'].map(res => res.main.temp_min);
-    //   let alldates = res['list'].map(res => res.dt);
-
-
-    //   alldates.forEach((res) => {
-    //       let jsdate = new Date(res * 1000);
-    //       this.weatherDates.push(jsdate.toLocaleTimeString('en', { year: 'numeric', month: 'short', day: 'numeric' }))
-    //   });
-    // });
-    this.subscription = this.signal.AlleSub.subscribe((res: Stats[]) => {
+    this.Nowsubscription = this.signal.neusteSub.subscribe((status: Stats) => {
+      // Aktuell Am telefon:
+      this.AktuellAmTelefonNR = status.amtelefon;
+      if (status.amtelefon < (status.angemeldet / 5)) {
+        this.AktuellAmTelefonCl = 'green';
+      } else if (status.amtelefon < (status.angemeldet / 4)) {
+        this.AktuellAmTelefonCl = 'olive';
+      } else if (status.amtelefon < (status.angemeldet / 3)) {
+        this.AktuellAmTelefonCl = 'yellow';
+      }else if (status.amtelefon < (status.angemeldet / 2)) {
+        this.AktuellAmTelefonCl = 'orange';
+      }else{
+        this.AktuellAmTelefonCl = 'red';
+      }
+    });
+    this.Allesubscription = this.signal.AlleSub.subscribe((res: WaitTimeProp[]) => {
       const format = new Intl.DateTimeFormat('de',{weekday: 'long', hour: '2-digit', minute: '2-digit'});
       this.Datums = [];
-      this.Anrufer = [];
-      this.Angemeldet = [];
+      this.WarteZeit = [];
+      // this.Angemeldet = [];
       res.forEach((itm: Stats) => {
         this.Datums.push(format.format(itm.timestamp) + ' Uhr');
-        this.Anrufer.push(itm.amtelefon);
-        this.Angemeldet.push(itm.angemeldet);
+        // this.Anrufer.push(itm.amtelefon);
+        this.WarteZeit.push(itm.waittime);
       });
       this.cdRef.detectChanges();
       this.chart = new Chart('canvas', {
@@ -51,15 +59,15 @@ export class DashboardComponent implements AfterViewInit, OnDestroy {
           labels: this.Datums,
           datasets: [
             {
-              data: this.Angemeldet,
-              borderColor: '#3cba9f',
+              data: this.WarteZeit,
+              borderColor: 'black', /*'#3cba9f'*/
               fill: true
             },
-            {
+            /*{
               data: this.Anrufer,
               borderColor: '#ffcc00',
               fill: true
-            },
+            },*/
           ]
         },
         options: {

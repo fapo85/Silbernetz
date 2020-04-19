@@ -1,174 +1,251 @@
-﻿using Microsoft.EntityFrameworkCore.Migrations.Operations;
+﻿using Microsoft.AspNetCore.SignalR;
+using Silbernetz.Actions;
+using Silbernetz.Controllers.SignalHub;
 using Silbernetz.Models;
+using Silbernetz.Models.Api;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.ComponentModel;
+using System.Data;
 using System.Linq;
+using System.Net;
+using System.Net.Mail;
+using System.Text.RegularExpressions;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace Silbernetz.Database
 {
     public class AnrufSafe
     {
-        private static readonly ConcurrentDictionary<Guid, Anruf> Save = new ConcurrentDictionary<Guid, Anruf>();
-        private static readonly Random random = new Random();
-        static AnrufSafe()
+        private SaveLock saveLock;
+        private readonly SortedSet<Anruf> Save = new SortedSet<Anruf>(new AnrufComparer());
+        private readonly SortedSet<WaitTimeProp> WaitTimeSave = new SortedSet<WaitTimeProp>(new WaitTimeComparer());
+        private readonly InoplaClient inoplaClient;
+        private readonly IHubContext<SignalRHub> hubContext;
+        public LiveData AktuelleStats { get; private set; }
+        private const int TAGEHOLEN = 7;
+        private static readonly TimeSpan WaitTimeAbstand = TimeSpan.FromHours(2);
+        private Updater updater;
+        public bool InitCompleted { get; private set; } = false;
+        public AnrufSafe(InoplaClient inoplaClient, IHubContext<SignalRHub> hubContext)
         {
-            //ADD FAKE DATA
-            DateTime Zeitpunkt = DateTime.Today.AddDays(-30);
-            int rand = 5;
-            while(Zeitpunkt < DateTime.Now)
+            this.inoplaClient = inoplaClient;
+            this.hubContext = hubContext;
+        }
+        public void Init()
+        {
+            Task t = new Task(async () =>
             {
-                rand = NextRandom(rand);
-                if(Zeitpunkt < DateTime.Today)
+                AktuelleStats = await inoplaClient.GetLiveDataAsync();
+                long skip = 0;
+                bool weiter = true;
+                DateTime last = DateTime.MinValue;
+                while (weiter)
                 {
-                    AddFakeAnruf(string.Empty, Zeitpunkt.AddSeconds(random.Next(800)), rand);
-                }
-                else
-                {
-                    AddFakeAnruf(GetRandomTel(), Zeitpunkt.AddSeconds(200), rand);
-                    for (int i = 0; i < rand; i++)
+                    Evn evn = await inoplaClient.GetEVNDataAsync(skip);
+                    foreach (var revn in evn.Response.Data)
                     {
-                        AddFakeAnruf(GetRandomTel(), Zeitpunkt.AddSeconds(3000), rand);
+                        Anruf anruf = new Anruf();
+                        anruf.DataFromEvn(revn);
+                        Save.Add(anruf);
+                        last = anruf.TimeStamp;
                     }
+                    skip += evn.Response.Count;
+                    //Hole 7 Tage;
+                    weiter = last > DateTime.Today.AddDays(-1 * TAGEHOLEN);
                 }
-                Zeitpunkt = Zeitpunkt.AddHours(1);
-            }
-        }
-
-        private static string GetRandomTel()
-        {
-            string[] telnr =
-            {
-                "0147852369",
-                "03025478526",
-                "017452558944",
-                "014588785255",
-                "014789899956",
-                "0302587415454",
-                "014587754225",
-                "0145877752369",
-                "0145877853669",
-                "014785225898",
-                "03025877782"
-            };
-            return telnr[random.Next(telnr.Length)];
-        }
-
-        private static int NextRandom(int rand)
-        {
-            if(random.Next(0, 2) == 0)
-            {
-                rand = Math.Max(0, rand - 1);
-            }
-            else
-            {
-                rand = Math.Min(10, rand + 1);
-            }
-            return rand;
-        }
-
-        private static void AddFakeAnruf(string Telnummer, DateTime Zeitpunkt, int Rand)
-        {
-            Anruf anruf = new Anruf()
-            {
-                Uuid = Guid.NewGuid(),
-                TelNummer = Telnummer,
-                TimeStamp = Zeitpunkt,
-                Benutzer = 70,
-                Angemeldet = (int)((double)Rand * (3 * random.NextDouble())),
-                AmTelefon = (int)((double)Rand * random.NextDouble()),
-            };
-            if (!string.IsNullOrEmpty(Telnummer)) {
-                anruf.Events.Add(new CallEvents()
-                {
-                    TimeStamp = Zeitpunkt,
-                    Event = EventType.connect
-                });
-                anruf.Events.Add(new CallEvents()
-                {
-                    TimeStamp = Zeitpunkt.AddSeconds(random.Next(2000)),
-                    Event = EventType.hangup
-                });
-            }
-            Save.GetOrAdd(anruf.Uuid, anruf);
-        }
-        public Anruf AnrufGet(Guid id, string TelNummer)
-        {
-            return Save.GetOrAdd(id, new Anruf()
-            {
-                Uuid = id,
-                TelNummer = TelNummer,
-                TimeStamp = DateTime.Now
+                updater = new Updater(inoplaClient, this);
+                saveLock = new SaveLock();
             });
-        }
-        public Anruf AnrufAddEvent(Guid id, string TelNummer, CallEvents callEvents)
-        {
-            var Anruf = AnrufGet(id, TelNummer);
-            Anruf.Events.Add(callEvents);
-            return AnrufUpdate(Anruf);
+            t.Start();
         }
 
-        private Anruf AnrufUpdate(Anruf anruf)
+        internal void UpdateStatistik()
         {
-            return anruf;
+            using (saveLock.Write())
+            {
+                DateTime last = WaitTimeSave.LastOrDefault() == null ? NextHour(Save.First().TimeStamp) : NextHour(WaitTimeSave.Last().TimeStamp);
+                while (last.Add(WaitTimeAbstand) < DateTime.Now)
+                {
+                    ulong WarteSekunden = 0;
+                    ulong anzahl = 0;
+                    foreach (var itms in Save.Where(it => 
+                    it.TimeStamp <= last.Add(WaitTimeAbstand) && it.TimeStamp.AddSeconds(it.OutBound) >= last.Subtract(WaitTimeAbstand)
+                    )){
+                        WarteSekunden += itms.Wait;
+                        anzahl++;
+                    }
+                    WaitTimeSave.Add(new WaitTimeProp()
+                    {
+                        TimeStamp = last,
+                        WaitTime = anzahl == 0 ? 0 : (uint)(WarteSekunden / anzahl)
+                    });
+                    last = last.Add(WaitTimeAbstand);
+                }
+                if(InitCompleted == false)
+                {
+                    InitCompleted = true;
+                    Console.WriteLine("Alle Daten wurden Geladen. Tage im Speicher: " + TAGEHOLEN);
+                }
+            }
         }
-
-        public Anruf AddStatsToAnruf(Anruf anruf, Stats stats)
+        private DateTime NextHour(DateTime dt)
         {
-            anruf.Angemeldet = stats.Angemeldet;
-            anruf.AmTelefon = stats.AmTelefon;
-            anruf.Benutzer = stats.Benutzer;
-            anruf.TimeStamp = stats.TimeStamp;
-            return AnrufUpdate(anruf);
+            var timeOfDay = dt.TimeOfDay;
+            var nextFullHour = TimeSpan.FromHours(Math.Ceiling(timeOfDay.TotalHours));
+            return dt.AddSeconds((nextFullHour - timeOfDay).TotalSeconds);
         }
         public IEnumerable<Anrufer> AnrufFromToday()
         {
             Dictionary<string, Anrufer> ret = new Dictionary<string, Anrufer>();
-            foreach (Anruf itm in Save.Values.Where(a => a.TelNummer != string.Empty))
+            using (saveLock.Read())
             {
-                Anrufer anrufer;
-                if (!ret.TryGetValue(itm.TelNummer, out anrufer))
+                foreach (Anruf itm in Save.Where(a => a.TimeStamp > DateTime.Today))
                 {
-                    anrufer = new Anrufer();
-                    anrufer.TelNummer = itm.TelNummer;
-                    ret.Add(itm.TelNummer, anrufer);
+                    Anrufer anrufer;
+                    if (!ret.TryGetValue(itm.TelNummer, out anrufer))
+                    {
+                        anrufer = new Anrufer();
+                        anrufer.TelNummer = itm.TelNummer;
+                        ret.Add(itm.TelNummer, anrufer);
+                    }
+                    anrufer.Anrufe.Add(itm);
                 }
-                anrufer.Anrufe.Add(new AnrufExport(itm.Uuid, itm.Events));
             }
             return ret.Values;
         }
-        public IEnumerable<Stats> AnrufStatisitk(DateTime after)
+
+        internal Task NewDataToAdd(LiveData liveData, Evn evn, LiveCalls liveCalls, DateTime letzteFehlerfreieAktualisierung)
         {
-            return Save.Values.Where(a => a.TimeStamp > after).OrderBy(a => a.TimeStamp).Select(a => new Stats()
+            //Aktualisiere Live Data
+            LiveData oldValues = AktuelleStats;
+            bool forcerenew = false;
+            if (liveData != null)
             {
-                Angemeldet = a.Angemeldet,
-                AmTelefon = a.AmTelefon,
-                Benutzer = a.Benutzer,
-                TimeStamp = a.TimeStamp
-            });
+                AktuelleStats = liveData;
+            }
+            //EVN Check
+            if (evn?.Response?.Data == null)
+            {
+                //Fehler im EVN Request, Noch Statistik versenden vor der Exception
+                if (liveData != null)
+                {
+                    CheckForUpdate(oldValues, liveData, false, letzteFehlerfreieAktualisierung).Wait();
+                }
+                throw new Exception("EVN sind null");
+            }
+            using (var lockob = saveLock.ReadThanWrite())
+            {
+                var SaveList = Save.Where(s => s.lauftnoch == false).ToList();
+                List<Datum> EvnToAdd = new List<Datum>(evn.Response.Data.Where(evn => SaveList.Where(sl => sl.id == evn.Id).SingleOrDefault() == null));
+                //Ab Hier in Save Schreiben
+                lockob.UpgradeToWriterLock();
+                foreach (Datum itm in EvnToAdd)
+                {
+                    Anruf anruf = Save.SingleOrDefault(so => so.id == itm.Id);
+                    if (anruf == null)
+                    {
+                        anruf = new Anruf();
+                        Save.Add(anruf);
+                    }
+                    anruf.DataFromEvn(itm);
+                }
+                if (liveCalls?.Response?.Data != null)
+                {
+                    foreach (CallDatum itm in liveCalls.Response.Data)
+                    {
+
+                        Anruf anruf = Save.SingleOrDefault(so => so.id == itm.Id);
+                        if (anruf == null)
+                        {
+                            anruf = new Anruf();
+                            Save.Add(anruf);
+                        }
+                        anruf.DataFromLC(itm);
+                    }
+                }
+            }
+
+            //LiveData Check
+            if (liveData == null)
+            {
+                throw new Exception("LiveData sind null keine Statistik versenden");
+            }
+            //Update
+            return CheckForUpdate(oldValues, liveData, forcerenew, letzteFehlerfreieAktualisierung);
+        }
+
+        public IEnumerable<WaitTimeProp> AnrufStatisitk(DateTime after)
+        {
+            List<WaitTimeProp> ret = new List<WaitTimeProp>();
+            Task<WaitTimeProp> TaskToNow = new Task<WaitTimeProp>(() => WaitTimeNow());
+            TaskToNow.Start();
+            using (saveLock.Read())
+            {
+                ret.AddRange(WaitTimeSave);
+            }
+            ret.Add(TaskToNow.Result);
+            return ret;
+             
+        }
+        public WaitTimeProp WaitTimeNow()
+        {
+            using (saveLock.Read())
+            {
+                ulong WarteSekunden = 0;
+                ulong anzahl = 0;
+                foreach (var itms in Save.Where(it => it.TimeStamp >= DateTime.Now && it.TimeStamp.AddSeconds(it.OutBound) <= DateTime.Now.Subtract(WaitTimeAbstand)))
+                {
+                    WarteSekunden += itms.Wait;
+                    anzahl++;
+                }
+                return new WaitTimeProp()
+                {
+                    TimeStamp = DateTime.Now,
+                    WaitTime = anzahl == 0 ? 0 : (uint)(WarteSekunden / anzahl)
+                };
+            }
+        }
+        public Stats GetStatsNow()
+        {
+            return Stats.FromLiveData(AktuelleStats, WaitTimeNow().WaitTime, AktuelleStats.TimeStamp);
         }
         public void AnrufCleanUp()
         {
             AnrufMakeAnonymous();
-         //   AnrufDelOld();
+            AnrufDelOld();
+            WaitTimeSaveDelold();
         }
         private void AnrufMakeAnonymous()
         {
-            foreach (Anruf itm in Save.Values.Where(a => a.TelNummer != string.Empty && a.TimeStamp < DateTime.Today))
+            using (saveLock.Read())
             {
-                itm.TelNummer = string.Empty;
-                itm.Events = new List<CallEvents>();
-                AnrufUpdate(itm);
+                foreach (Anruf itm in Save.Where(a => a.TimeStamp < DateTime.Today && !a.TelNummer.EndsWith("XXX")))
+                {
+                    itm.TelNummer = itm.TelNummer.Remove(itm.TelNummer.Length - 3, 3) + "XXX";
+                }
             }
         }
         private void AnrufDelOld()
         {
-            foreach (Anruf itm in Save.Values.Where(a => a.TimeStamp < DateTime.Today.AddDays(-30)))
+            using (saveLock.Write())
             {
-                Save.Remove(itm.Uuid, out var papierkorb);
+                Save.RemoveWhere(a => a.TimeStamp < DateTime.Today.AddDays(-1 * TAGEHOLEN));
             }
+        }
+        private void WaitTimeSaveDelold()
+        {
+            using (saveLock.Write())
+            {
+                WaitTimeSave.RemoveWhere(a => a.TimeStamp < DateTime.Today.AddDays(-1 * TAGEHOLEN));
+            }
+        }
+        private Task CheckForUpdate(LiveData oldData, LiveData newData, bool forcerenew, DateTime zeitpunkt)
+        {
+            Stats stats = Stats.FromLiveData(newData, WaitTimeNow().WaitTime, zeitpunkt);
+            stats.Changes = forcerenew || oldData == null || oldData.AmTelefon != stats.AmTelefon || oldData.Angemeldet != stats.Angemeldet || oldData.Benutzer != stats.Benutzer;
+            return hubContext.Clients.All.SendAsync("stats", stats);
         }
     }
 }

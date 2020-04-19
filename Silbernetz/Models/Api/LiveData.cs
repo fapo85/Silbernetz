@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 
-namespace Silbernetz.Models
+namespace Silbernetz.Models.Api
 {
 
     public partial class LiveData
@@ -13,29 +13,22 @@ namespace Silbernetz.Models
         public Version Version { get; set; }
 
         [JsonPropertyName("response")]
-        public Response Response { get; set; }
+        public ResponseLive Response { get; set; }
         public DateTime TimeStamp { get; set; } = DateTime.Now;
         public int Abgemeldet => Response.Data.Where(r => r.Registrations.Count == 0).Count();
         public int Angemeldet => Response.Data.Where(r => r.Registrations.Count > 0).Count();
         public int Benutzer => Response.Data.Length;
         public int AmTelefon => Response.Data.Where(r => r.Live.Count > 0 && r.Registrations.Count > 0).Count();
         public int Verfügbar => Response.Data.Where(r => r.Live.Count == 0 && r.Registrations.Count > 0).Count();
-    }
-
-    public partial class Response
-    {
-        [JsonPropertyName("count")]
-        public long Count { get; set; }
-
-        [JsonPropertyName("data")]
-        public ResponseDatum[] Data { get; set; }
 
     }
+
+
 
     public partial class ResponseDatum
     {
         [JsonPropertyName("id")]
-        public long Id { get; set; }
+        public ulong Id { get; set; }
 
         [JsonPropertyName("username")]
         public string Username { get; set; }
@@ -116,15 +109,4 @@ namespace Silbernetz.Models
         public string Port { get; set; }
     }
 
-    public partial class Version
-    {
-        [JsonPropertyName("used")]
-        public string Used { get; set; }
-
-        [JsonPropertyName("expire")]
-        public string Expire { get; set; }
-
-        [JsonPropertyName("new_available")]
-        public object NewAvailable { get; set; }
-    }
 }

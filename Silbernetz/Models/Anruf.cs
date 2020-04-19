@@ -1,30 +1,60 @@
-﻿using System;
+﻿using Silbernetz.Models.Api;
+using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Text.Json.Serialization;
 
 namespace Silbernetz.Models
 {
-    public class Anruf : Stats
+    public class Anruf
     {
         /// <summary>
         /// Eindeutige Call-ID
         /// </summary>
-        [JsonPropertyName("uuid")]
-        public Guid Uuid { get; set; }
+        [JsonPropertyName("id")]
+        public ulong id { get; set; }
+        [JsonPropertyName("telnummer")]
         public string TelNummer { get; set; }
-        public List<CallEvents> Events { get; set; } = new List<CallEvents>();
-    }
-    public class CallEvents
-    {
+        [JsonPropertyName("service")]
+        public string Service { get; set; }
         [JsonPropertyName("timestamp")]
         public DateTime TimeStamp { get; set; }
-        [JsonPropertyName("event")]
-        public EventType Event { get; set; }
-        public CallEvents() { }
-        public CallEvents(CallConnectEvent eventSource)
+        [JsonPropertyName("inbound")]
+        public uint InBound { get; set; }
+        [JsonPropertyName("outbound")]
+        public uint OutBound { get; set; }
+        [JsonPropertyName("wait")]
+        public uint Wait => InBound - OutBound;
+        [JsonPropertyName("target")]
+        public string Target { get; set; }
+        [JsonPropertyName("lauftnoch")]
+        public bool lauftnoch { get; set; }
+        public void DataFromEvn(Datum evn)
         {
-            TimeStamp = DateTime.Now;
-            Event = (EventType)Enum.Parse(typeof(EventType), eventSource.Event);
+            id = evn.Id;
+            if (string.IsNullOrEmpty(TelNummer))
+            {
+                TelNummer = evn.Caller;
+            }
+            Service = evn.Service;
+            TimeStamp = DateTime.Parse(evn.Created);
+            InBound = evn.Duration.Inbound;
+            OutBound = evn.Duration.Outbound;
+            if (!string.IsNullOrEmpty(Target))
+            {
+                Target = evn.Service;
+            }
+            lauftnoch = false;
+        }
+
+        internal void DataFromLC(CallDatum itm)
+        {
+            id = itm.Id;
+            TelNummer = itm.Caller;
+            OutBound = (uint)itm.Duration;
+            Target = itm.Destination;
+            lauftnoch = true;
+            TimeStamp = DateTime.Parse(itm.Created);
         }
     }
 }

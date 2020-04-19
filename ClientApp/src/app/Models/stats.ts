@@ -1,9 +1,9 @@
+import { WaitTimeProp } from './wait-time-prop';
 
-export class Stats {
+export class Stats extends WaitTimeProp {
   angemeldet: number;
   amtelefon: number;
   benutzer: number;
-  timestamp: Date;
   public static GetEmpty(): Stats {
     const stats = new Stats();
     stats.angemeldet = 0;

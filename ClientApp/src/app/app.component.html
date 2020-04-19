@@ -1,5 +1,5 @@
 <!-- sidebar -->
-<div class="ui sidebar inverted vertical menu sidebar-menu" id="sidebar">
+<div class="ui sidebar inverted vertical menu sidebar-menu" #sidebar id="sidebar">
   <div class="item">
     <div class="header">General</div>
     <div class="menu">
@@ -91,7 +91,7 @@
 
 <nav class="ui top fixed inverted menu">
   <div class="left menu">
-    <a href="#" class="sidebar-menu-toggler item" data-target="#sidebar">
+    <a class="sidebar-menu-toggler item" (click)="toggleSidebar()" data-target="#sidebar">
       <i class="sidebar icon"></i>
     </a>
     <a href="#" class="header item">
@@ -103,10 +103,12 @@
     <a href="#" class="item">
       <i class="bell icon"></i>
     </a>
+    <a (click)="AuthClick()">
     <div class="ui dropdown item">
-      <i class="user cirlce icon"></i>
-     <div class="menu">
-       <!-- <a href="#" class="item"> <i class="info circle icon"></i> Profile</a>
+      <i *ngIf="loggedIn" class="user cirlce icon"></i>
+      <i *ngIf="!loggedIn" class="user secret cirlce icon"></i>
+     <!--<div class="menu">
+        <a href="#" class="item"> <i class="info circle icon"></i> Profile</a>
         <a href="#" class="item">
           <i class="wrench icon"></i>
           Settings</a
@@ -114,23 +116,15 @@
         <a href="#" class="item">
           <i class="sign-out icon"></i>
           Logout
-        </a>-->
-      </div>
-    </div>
+        </a>
+      </div>-->
+    </div></a>
   </div>
 </nav>
 
 <!-- top nav -->
 <div class="pusher">
   <div class="main-content">
-    <div class="ui grid stackable padded">
-      <div class="ui grid stackable padded">
-        <div class="column">
-          <div class="ui celled striped">
-            <router-outlet></router-outlet>
-          </div>
-        </div>
-      </div>
-    </div>
+    <router-outlet></router-outlet>
   </div>
 </div>

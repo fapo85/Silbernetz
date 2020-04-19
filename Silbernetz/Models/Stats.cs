@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Silbernetz.Models.Api;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
@@ -7,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace Silbernetz.Models
 {
-    public class Stats
+    public class Stats: WaitTimeProp
     {
         /// <summary>
         /// Personen die Derzeit Ihr Telefon Eingeschaltet haben.
@@ -25,20 +26,22 @@ namespace Silbernetz.Models
         [JsonPropertyName("benutzer")]
         public int Benutzer { get; set; }
         /// <summary>
-        /// Zeitpunkt der Datenaufnahme
+        /// Es sind neue Daten vorhande, oder hat sich nur der Zeitstepmel geändert
         /// </summary>
-        [JsonPropertyName("timestamp")]
-        public DateTime TimeStamp { get; set; }
+        [JsonPropertyName("changes")]
+        public bool Changes { get; set; }
 
-        public static Stats FromLiveData(LiveData livedata)
+        public static Stats FromLiveData(LiveData livedata, uint WaitTime, DateTime zeitpunkt)
         {
             return new Stats()
             {
                 Angemeldet = livedata.Angemeldet,
                 AmTelefon = livedata.AmTelefon,
                 Benutzer = livedata.Benutzer,
-                TimeStamp = livedata.TimeStamp
+                WaitTime = WaitTime,
+                TimeStamp = zeitpunkt,
             };
         }
+
     }
 }
