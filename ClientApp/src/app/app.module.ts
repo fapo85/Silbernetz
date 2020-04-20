@@ -44,7 +44,6 @@ import { environment } from 'src/environments/environment';
   bootstrap: [AppComponent]
 })
 export class AppModule {
-  rediurl: string = ;
   constructor(msalService: MsalService) {
     msalService.handleRedirectCallback(_ => { });
   }
