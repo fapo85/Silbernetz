@@ -10,7 +10,7 @@ namespace Silbernetz.Models
         /// Dauer der Warteschlange
         /// </summary>
         [JsonPropertyName("waittime")]
-        public uint WaitTime { get; set; }
+        public ulong WaitTime { get; set; }
 
         /// <summary>
         /// Zeitpunkt der Datenaufnahme

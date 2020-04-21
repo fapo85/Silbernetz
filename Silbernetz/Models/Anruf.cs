@@ -20,11 +20,19 @@ namespace Silbernetz.Models
         [JsonPropertyName("timestamp")]
         public DateTime TimeStamp { get; set; }
         [JsonPropertyName("inbound")]
-        public uint InBound { get; set; }
+        public ulong InBound { get; set; }
         [JsonPropertyName("outbound")]
-        public uint OutBound { get; set; }
+        public ulong OutBound { get; set; }
         [JsonPropertyName("wait")]
-        public uint Wait => InBound - OutBound;
+        public ulong Wait {
+            get {
+                if(InBound <= OutBound)
+                {
+                    return 0;
+                }
+                return InBound - OutBound;
+            }
+        }
         [JsonPropertyName("target")]
         public string Target { get; set; }
         [JsonPropertyName("lauftnoch")]

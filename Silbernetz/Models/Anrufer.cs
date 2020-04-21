@@ -18,9 +18,9 @@ namespace Silbernetz.Models
             }
         }
         [JsonPropertyName("gesamtdauer")]
-        public uint GesamtDauer {
+        public ulong GesamtDauer {
             get {
-                uint dauer = 0;
+                ulong dauer = 0;
                 foreach(Anruf ae in Anrufe)
                 {
                     dauer += ae.OutBound;

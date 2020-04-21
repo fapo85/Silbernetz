@@ -66,28 +66,59 @@ namespace Silbernetz.Database
             using (saveLock.Write())
             {
                 DateTime last = WaitTimeSave.LastOrDefault() == null ? NextHour(Save.First().TimeStamp) : NextHour(WaitTimeSave.Last().TimeStamp);
+                ulong Wartezeit = 0;
                 while (last.Add(WaitTimeAbstand) < DateTime.Now)
                 {
+                    //var dt = DateTime.Today.AddDays(-4).AddHours(7);
                     ulong WarteSekunden = 0;
                     ulong anzahl = 0;
-                    foreach (var itms in Save.Where(it => 
+                    foreach (var itms in Save.Where(it =>
                     it.TimeStamp <= last.Add(WaitTimeAbstand) && it.TimeStamp.AddSeconds(it.OutBound) >= last.Subtract(WaitTimeAbstand)
-                    )){
-                        WarteSekunden += itms.Wait;
-                        anzahl++;
+                    ))
+                    {
+                        if (itms.OutBound > 0)
+                        {
+                            WarteSekunden += itms.Wait;
+                            anzahl++;
+                        }
+                    }
+                    if(anzahl > 0)
+                    {
+                        Wartezeit = (ulong)(WarteSekunden / anzahl);
                     }
                     WaitTimeSave.Add(new WaitTimeProp()
                     {
                         TimeStamp = last,
-                        WaitTime = anzahl == 0 ? 0 : (uint)(WarteSekunden / anzahl)
+                        WaitTime = Wartezeit
                     });
                     last = last.Add(WaitTimeAbstand);
                 }
-                if(InitCompleted == false)
+                if (InitCompleted == false)
                 {
                     InitCompleted = true;
                     Console.WriteLine("Alle Daten wurden Geladen. Tage im Speicher: " + TAGEHOLEN);
                 }
+            }
+        }
+        public WaitTimeProp WaitTimeNow()
+        {
+            using (saveLock.Read())
+            {
+                ulong WarteSekunden = 0;
+                ulong anzahl = 0;
+                foreach (var itms in Save.Where(it => it.TimeStamp >= DateTime.Now && it.TimeStamp.AddSeconds(it.OutBound) <= DateTime.Now.Subtract(WaitTimeAbstand)))
+                {
+                    if (itms.OutBound > 0)
+                    {
+                        WarteSekunden += itms.Wait;
+                        anzahl++;
+                    }
+                }
+                return new WaitTimeProp()
+                {
+                    TimeStamp = DateTime.Now,
+                    WaitTime = anzahl == 0 ? 0 : (ulong)(WarteSekunden / anzahl)
+                };
             }
         }
         private DateTime NextHour(DateTime dt)
@@ -187,25 +218,7 @@ namespace Silbernetz.Database
             }
             ret.Add(TaskToNow.Result);
             return ret;
-             
-        }
-        public WaitTimeProp WaitTimeNow()
-        {
-            using (saveLock.Read())
-            {
-                ulong WarteSekunden = 0;
-                ulong anzahl = 0;
-                foreach (var itms in Save.Where(it => it.TimeStamp >= DateTime.Now && it.TimeStamp.AddSeconds(it.OutBound) <= DateTime.Now.Subtract(WaitTimeAbstand)))
-                {
-                    WarteSekunden += itms.Wait;
-                    anzahl++;
-                }
-                return new WaitTimeProp()
-                {
-                    TimeStamp = DateTime.Now,
-                    WaitTime = anzahl == 0 ? 0 : (uint)(WarteSekunden / anzahl)
-                };
-            }
+
         }
         public Stats GetStatsNow()
         {

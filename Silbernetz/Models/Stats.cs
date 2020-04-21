@@ -31,7 +31,7 @@ namespace Silbernetz.Models
         [JsonPropertyName("changes")]
         public bool Changes { get; set; }
 
-        public static Stats FromLiveData(LiveData livedata, uint WaitTime, DateTime zeitpunkt)
+        public static Stats FromLiveData(LiveData livedata, ulong WaitTime, DateTime zeitpunkt)
         {
             return new Stats()
             {

@@ -17,8 +17,12 @@ export class DashboardComponent implements AfterViewInit, OnDestroy {
   WarteZeit = [];
   AktuellAmTelefonCl: string;
   AktuellAmTelefonNR: number;
+  AktuellWarteCl: string;
+  AktuellWarteNR: string;
+  AktuellAngemeldetNr: number;
   Allesubscription: Subscription;
   Nowsubscription: Subscription;
+  naechsteAktualisierungZP = 0;
   constructor(private signal: SignalRService,
               private cdRef: ChangeDetectorRef) { }
   ngOnDestroy(): void {
@@ -41,9 +45,29 @@ export class DashboardComponent implements AfterViewInit, OnDestroy {
       }else{
         this.AktuellAmTelefonCl = 'red';
       }
+      this.AktuellWarteNR = '';
+      if(status.waittime > 60){
+        this.AktuellWarteNR += status.waittime / 60 + 'Min ';
+      }
+      this.AktuellWarteNR += status.waittime % 60 + 'Sek';
+      if (status.waittime < 45) {
+        this.AktuellWarteCl = 'green';
+      } else if (status.waittime < 55 ){
+        this.AktuellWarteCl = 'olive';
+      } else if (status.waittime < 65) {
+        this.AktuellWarteCl = 'yellow';
+      }else if (status.waittime < 80) {
+        this.AktuellWarteCl = 'orange';
+      }else{
+        this.AktuellWarteCl = 'red';
+      }
+      this.AktuellAngemeldetNr = status.angemeldet;
     });
     this.Allesubscription = this.signal.AlleSub.subscribe((res: WaitTimeProp[]) => {
-      const format = new Intl.DateTimeFormat('de',{weekday: 'long', hour: '2-digit', minute: '2-digit'});
+      const now = new Date();
+      if (this.naechsteAktualisierungZP > now.getTime() || this.naechsteAktualisierungZP === 0){
+      this.naechsteAktualisierungZP = (now.getTime() + 600000);
+      const format = new Intl.DateTimeFormat('de', {weekday: 'long', hour: '2-digit', minute: '2-digit'});
       this.Datums = [];
       this.WarteZeit = [];
       // this.Angemeldet = [];
@@ -85,6 +109,7 @@ export class DashboardComponent implements AfterViewInit, OnDestroy {
         }
     });
       this.cdRef.detectChanges();
+    }
   });
   }
 }
