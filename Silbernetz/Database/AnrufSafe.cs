@@ -106,7 +106,7 @@ namespace Silbernetz.Database
             {
                 ulong WarteSekunden = 0;
                 ulong anzahl = 0;
-                foreach (var itms in Save.Where(it => it.TimeStamp >= DateTime.Now && it.TimeStamp.AddSeconds(it.OutBound) <= DateTime.Now.Subtract(WaitTimeAbstand)))
+                foreach (var itms in Save.Where(it => it.TimeStamp.AddSeconds(it.OutBound) >= DateTime.Now.Subtract(WaitTimeAbstand)))
                 {
                     if (itms.OutBound > 0)
                     {
