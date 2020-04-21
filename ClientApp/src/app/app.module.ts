@@ -9,6 +9,7 @@ import { DashboardComponent } from './dashboard/dashboard.component';
 import { CallTodayComponent } from './call-today/call-today.component';
 import { NumValueComponent } from './num-value/num-value.component';
 import { environment } from 'src/environments/environment';
+import { BlacklistComponent } from './blacklist/blacklist.component';
 
 export function GetRedirectUrl(): string{
   return environment.production ? 'https://silbernetz.gemeinschaft.dev' : 'http://localhost:4200/';
@@ -19,7 +20,8 @@ export function GetRedirectUrl(): string{
     AppComponent,
     DashboardComponent,
     CallTodayComponent,
-    NumValueComponent
+    NumValueComponent,
+    BlacklistComponent
   ],
   imports: [
     BrowserModule,

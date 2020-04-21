@@ -28,6 +28,13 @@ namespace Silbernetz.Actions
         private string ApiUrl(String enpoint) => $"https://api.inopla.de/v1000/json/{ApiId}/{ApiKey}/{enpoint}";
         public async Task<LiveData> GetLiveDataAsync() => await GetAsync<LiveData>(ApiUrl("Live/SIP"));
         public async Task<LiveCalls> GetLiveCallsAsync() => await GetAsync<LiveCalls>(ApiUrl("Live/Calls"));
+        public async Task<BlackListItems> GetBlackAsync() => await GetAsync<BlackListItems>(ApiUrl("Lists/Callerlists/1407/Items"));
+
+        internal void AddToBlackList(BLAction action)
+        {
+            throw new NotImplementedException();
+        }
+
         public async Task<Evn> GetEVNDataAsync(long offset = 0) => await GetAsync<Evn>(ApiUrl($"/Live/EVN?offset={offset}"));
         private async Task<T> GetAsync<T>(string url)
         {

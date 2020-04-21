@@ -27,11 +27,13 @@ namespace Silbernetz.Database
         private const int TAGEHOLEN = 7;
         private static readonly TimeSpan WaitTimeAbstand = TimeSpan.FromHours(2);
         private Updater updater;
+        private readonly BlackListSave blsave;
         public bool InitCompleted { get; private set; } = false;
-        public AnrufSafe(InoplaClient inoplaClient, IHubContext<SignalRHub> hubContext)
+        public AnrufSafe(InoplaClient inoplaClient, IHubContext<SignalRHub> hubContext, BlackListSave blsave)
         {
             this.inoplaClient = inoplaClient;
             this.hubContext = hubContext;
+            this.blsave = blsave;
         }
         public void Init()
         {
@@ -55,7 +57,7 @@ namespace Silbernetz.Database
                     //Hole 7 Tage;
                     weiter = last > DateTime.Today.AddDays(-1 * TAGEHOLEN);
                 }
-                updater = new Updater(inoplaClient, this);
+                updater = new Updater(inoplaClient, this, blsave);
                 saveLock = new SaveLock();
             });
             t.Start();
@@ -100,6 +102,8 @@ namespace Silbernetz.Database
                 }
             }
         }
+
+
         public WaitTimeProp WaitTimeNow()
         {
             using (saveLock.Read())

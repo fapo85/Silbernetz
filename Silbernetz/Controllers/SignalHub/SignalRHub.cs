@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.SignalR;
 using Silbernetz.Actions;
 using Silbernetz.Database;
 using Silbernetz.Models;
+using Silbernetz.Models.Api;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -14,9 +15,11 @@ namespace Silbernetz.Controllers.SignalHub
     public partial class SignalRHub : Hub
     {
         private readonly AnrufSafe database;
-        public SignalRHub(AnrufSafe database)
+        private readonly BlackListSave blsave;
+        public SignalRHub(AnrufSafe database, BlackListSave blsave)
         {
             this.database = database;
+            this.blsave = blsave;
         }
         public override Task OnConnectedAsync()
         {
@@ -32,6 +35,16 @@ namespace Silbernetz.Controllers.SignalHub
         public IEnumerable<WaitTimeProp> GetStatistikFuerTage(int tage)
         {
             return database.AnrufStatisitk(DateTime.Now.AddDays(-1 * tage));
+        }
+        [Authorize]
+        public IEnumerable<BLIDatum> GetBlackList()
+        {
+            return blsave.GetList();
+        }
+        [Authorize]
+        public void AddToBlackList(string nr, string description)
+        {
+            blsave.Add(nr, description);
         }
     }
 }

@@ -12,13 +12,14 @@ namespace Silbernetz.Actions
     {
         private readonly InoplaClient inoplaClient;
         private readonly AnrufSafe database;
+        private readonly BlackListSave blsave;
         private readonly Task runnner;
         private DateTime letzteFehlerfreieAktualisierung = DateTime.MinValue;
         private DateTime letztesAufräumen = DateTime.MinValue;
         private static bool OnlyOneInstanceCounter = false;
         //Es Wird immer Mindestens so Lange gewartet bis ein Arbeitsschritt abgeschlossen ist.
         private static readonly TimeSpan SchlafensZeit = TimeSpan.FromSeconds(6);
-        public Updater(InoplaClient inoplaClient, AnrufSafe database)
+        public Updater(InoplaClient inoplaClient, AnrufSafe database, BlackListSave blsave)
         {
             if (OnlyOneInstanceCounter)
             {
@@ -27,6 +28,7 @@ namespace Silbernetz.Actions
             OnlyOneInstanceCounter = true;
             this.inoplaClient = inoplaClient;
             this.database = database;
+            this.blsave = blsave;
             runnner = new Task(()=> Schleife());
             runnner.Start();
         }
@@ -85,6 +87,15 @@ namespace Silbernetz.Actions
             {
                 fehler = true;
                 Console.WriteLine("Updater: Fehler Beim Holen der EVN Daten: " + e.Message);
+            }
+            try
+            {
+                blsave.RenewBlackList(inoplaClient.GetBlackAsync().Result);
+            }
+            catch (Exception e)
+            {
+                fehler = true;
+                Console.WriteLine("Updater: Fehler Beim Holen der Blacklist Daten: " + e.Message);
             }
             try
             {

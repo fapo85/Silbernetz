@@ -1,12 +1,13 @@
 import { Injectable } from '@angular/core';
 import * as signalR from '@aspnet/signalr';
-import { BehaviorSubject, Observable } from 'rxjs';
+import { BehaviorSubject, Observable, Subject } from 'rxjs';
 import { BroadcastService } from '@azure/msal-angular';
 import { Stats } from '../Models/stats';
 import { environment } from 'src/environments/environment';
 import { Anrufer } from '../Models/anrufer';
 import { AnrufExport } from '../Models/anruf-export';
 import { WaitTimeProp } from '../Models/wait-time-prop';
+import { BLIDatum } from '../Models/blidatum';
 
 @Injectable({
   providedIn: 'root'
@@ -86,5 +87,13 @@ export class SignalRService{
       this.HoleAnruferHeute();
     }
     return this.anruferHeute;
+  }
+  public GetBlacklist(): Observable<BLIDatum[]> {
+    const sub = new Subject<BLIDatum[]>();
+    this.hubConnection.invoke('GetBlackList').then((data: BLIDatum[]) =>{
+      data.forEach(itm => itm.created = new Date(itm.created));
+      sub.next(data);
+    });
+    return sub;
   }
 }
