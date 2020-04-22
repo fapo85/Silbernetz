@@ -16,9 +16,10 @@ namespace Silbernetz.Actions
         private readonly Task runnner;
         private DateTime letzteFehlerfreieAktualisierung = DateTime.MinValue;
         private DateTime letztesAufräumen = DateTime.MinValue;
+        private DateTime letztesBlacklistUpdate = DateTime.MinValue;
         private static bool OnlyOneInstanceCounter = false;
         //Es Wird immer Mindestens so Lange gewartet bis ein Arbeitsschritt abgeschlossen ist.
-        private static readonly TimeSpan SchlafensZeit = TimeSpan.FromSeconds(6);
+        private static readonly TimeSpan SchlafensZeit = TimeSpan.FromSeconds(15);
         public Updater(InoplaClient inoplaClient, AnrufSafe database, BlackListSave blsave)
         {
             if (OnlyOneInstanceCounter)
@@ -88,14 +89,9 @@ namespace Silbernetz.Actions
                 fehler = true;
                 Console.WriteLine("Updater: Fehler Beim Holen der EVN Daten: " + e.Message);
             }
-            try
+            if (letztesBlacklistUpdate.AddMinutes(3) > DateTime.Now)
             {
-                blsave.RenewBlackList(inoplaClient.GetBlackAsync().Result);
-            }
-            catch (Exception e)
-            {
-                fehler = true;
-                Console.WriteLine("Updater: Fehler Beim Holen der Blacklist Daten: " + e.Message);
+                fehler = UpdateBlacklist();
             }
             try
             {
@@ -123,6 +119,20 @@ namespace Silbernetz.Actions
             catch (Exception e)
             {
                 Console.WriteLine("Updater: Fehler Beim Aufräumen der Daten: " + e.Message);
+            }
+        }
+        public bool UpdateBlacklist()
+        {
+            try
+            {
+                blsave.RenewBlackList(inoplaClient.GetBlackAsync().Result);
+                letztesBlacklistUpdate = DateTime.Now;
+                return true;
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine("Updater: Fehler Beim Holen der Blacklist Daten: " + e.Message);
+                return false;
             }
         }
     }

@@ -1,5 +1,6 @@
 import { BrowserModule } from '@angular/platform-browser';
 import { NgModule } from '@angular/core';
+import { FormsModule } from '@angular/forms';
 
 import { MsalModule, MsalService } from '@azure/msal-angular';
 
@@ -10,6 +11,7 @@ import { CallTodayComponent } from './call-today/call-today.component';
 import { NumValueComponent } from './num-value/num-value.component';
 import { environment } from 'src/environments/environment';
 import { BlacklistComponent } from './blacklist/blacklist.component';
+import { AddBlackEntryComponent } from './add-black-entry/add-black-entry.component';
 
 export function GetRedirectUrl(): string{
   return environment.production ? 'https://silbernetz.gemeinschaft.dev' : 'http://localhost:4200/';
@@ -21,11 +23,13 @@ export function GetRedirectUrl(): string{
     DashboardComponent,
     CallTodayComponent,
     NumValueComponent,
-    BlacklistComponent
+    BlacklistComponent,
+    AddBlackEntryComponent
   ],
   imports: [
     BrowserModule,
     AppRoutingModule,
+    FormsModule,
     MsalModule.forRoot({
       auth: {
           clientId: '57932fae-4538-44a5-a4df-6ef590e306dd',

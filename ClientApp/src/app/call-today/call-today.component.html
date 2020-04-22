@@ -1,7 +1,8 @@
 <div class="ui middle aligned selection divided list">
   <div class="content item" *ngFor="let anrufer of Data">
     <div class="header">{{anrufer.telnummer}}
-      <a><i class="icon trash right"></i></a></div>
+      <a (click)="addBlackList(anrufer.telnummer)"><i class="icon trash right"></i></a></div>
   <div class="description righ">Anrufe: {{ anrufer.anzahl }} Dauer: {{ CalcGesamtDauer(anrufer.gesamtdauer) }}</div>
   </div>
 </div>
+<sn-add-black-entry *ngIf="EintragSperrenOpen" [telnr]="EintragSperrenTel" (formclose)="addBlackListClose($event)"></sn-add-black-entry>

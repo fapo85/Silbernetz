@@ -30,9 +30,19 @@ namespace Silbernetz.Actions
         public async Task<LiveCalls> GetLiveCallsAsync() => await GetAsync<LiveCalls>(ApiUrl("Live/Calls"));
         public async Task<BlackListItems> GetBlackAsync() => await GetAsync<BlackListItems>(ApiUrl("Lists/Callerlists/1407/Items"));
 
-        internal void AddToBlackList(BLAction action)
+        internal async void AddToBlackList(BLAction action)
         {
-            throw new NotImplementedException();
+            using (HttpClient client = new HttpClient())
+            {
+                HttpContent tosend = new StringContent(JsonSerializer.Serialize<BLAction>(action));
+                using (var response = await client.PostAsync("Lists/Callerlists/1407/Items" , tosend))
+                {
+                    if (!response.IsSuccessStatusCode)
+                    {
+                        throw new Exception($"Error in Add To Blacklist Request: {response.StatusCode}");
+                    }
+                }
+            }
         }
 
         public async Task<Evn> GetEVNDataAsync(long offset = 0) => await GetAsync<Evn>(ApiUrl($"/Live/EVN?offset={offset}"));

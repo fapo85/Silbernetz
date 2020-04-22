@@ -63,6 +63,11 @@ namespace Silbernetz.Database
             t.Start();
         }
 
+        internal void UpdateBlacklist()
+        {
+            updater.UpdateBlacklist();
+        }
+
         internal void UpdateStatistik()
         {
             using (saveLock.Write())

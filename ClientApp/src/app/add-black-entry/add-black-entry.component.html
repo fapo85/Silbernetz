@@ -1,0 +1,32 @@
+<div class="ui ">
+
+</div>
+<div class="content active modal">
+  <form class="ui form" autocomplete="off" (ngSubmit)="onSubmit()" #myForm="ngForm">
+    <div class="field">
+      <div class="label">
+        Einen Eintrag auf die Blacklist Setzen
+      </div>
+      <div>
+        <label>
+          Telefonnummer
+        <input type="text" name="telnr" [(ngModel)]="telnr">
+      </label>
+      </div>
+    </div>
+      <div>
+        <label>
+          Kommentar
+          <input type="text" name="kommentar" [(ngModel)]="kommentar">
+        </label>
+      </div>
+  </form>
+</div>
+<div class="actions">
+  <button type="button" class="ui black button" (click)="onCancel()">
+    Abbrechen
+  </button>
+  <button type="submit" class="ui red button" [disabled]="!isValid()">
+    Auf die Blacklist seten
+  </button>
+</div>

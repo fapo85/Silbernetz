@@ -45,6 +45,7 @@ namespace Silbernetz.Controllers.SignalHub
         public void AddToBlackList(string nr, string description)
         {
             blsave.Add(nr, description);
+            database.UpdateBlacklist();
         }
     }
 }

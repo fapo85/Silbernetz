@@ -96,4 +96,11 @@ export class SignalRService{
     });
     return sub;
   }
+  public AddBlacklistEntry(telnr: string, kommentar: string): Subject<boolean> {
+    const sub = new Subject<boolean>();
+    this.hubConnection.invoke('AddToBlackList', telnr, kommentar).then(() =>
+      sub.next(true)
+    );
+    return sub;
+  }
 }
