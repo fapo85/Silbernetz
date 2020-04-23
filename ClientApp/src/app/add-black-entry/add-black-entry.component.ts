@@ -18,6 +18,7 @@ export class AddBlackEntryComponent implements OnInit {
     return this.kommentar.length > 10  && this.telnr.length > 4;
   }
   onSubmit(){
+    console.log('Submit Add Blacklist');
     this.signal.AddBlacklistEntry(this.telnr, this.kommentar).subscribe(() => {
       this.formclose.emit(true);
     });

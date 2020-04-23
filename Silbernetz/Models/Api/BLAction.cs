@@ -14,23 +14,23 @@ namespace Silbernetz.Models.Api
         /// Rufnummer
         /// </summary>
         [JsonPropertyName("caller")]
-        string Caller { get; set; }
+        public string Caller { get; set; }
         /// <summary>
         /// Einzeilige Text-Eingabe
 
         /// </summary>
         [JsonPropertyName("description")]
-        string Description { get; set; }
+        public string Description { get; set; }
         /// <summary>
         /// Blocken
         /// </summary>
         [JsonPropertyName("block")]
-        bool Block { get; set; }
+        public bool Block { get; set; }
         /// <summary>
         /// Rufnummer
         /// </summary>
         [JsonPropertyName("locked_up")]
-        string Locked_Up { get; set; }
+        public string Locked_Up { get; set; }
         public BLAction(string Caller, string Description, int tage = 1)
         {
             if(tage < 1 || tage > (1+ MAXDAYS))

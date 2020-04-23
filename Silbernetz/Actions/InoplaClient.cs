@@ -6,6 +6,7 @@ using Silbernetz.Models.Api;
 using Silbernetz.Models.Conf;
 using System;
 using System.Net.Http;
+using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
 
@@ -34,8 +35,9 @@ namespace Silbernetz.Actions
         {
             using (HttpClient client = new HttpClient())
             {
-                HttpContent tosend = new StringContent(JsonSerializer.Serialize<BLAction>(action));
-                using (var response = await client.PostAsync("Lists/Callerlists/1407/Items" , tosend))
+                string json = JsonSerializer.Serialize<BLAction>(action);
+                HttpContent tosend = new StringContent(json, Encoding.UTF8, "application/json");
+                using (var response = await client.PostAsync(ApiUrl("Lists/Callerlists/1407/Items") , tosend))
                 {
                     if (!response.IsSuccessStatusCode)
                     {
