@@ -89,7 +89,7 @@ namespace Silbernetz.Actions
                 fehler = true;
                 Console.WriteLine("Updater: Fehler Beim Holen der EVN Daten: " + e.Message);
             }
-            if (letztesBlacklistUpdate.AddMinutes(3) > DateTime.Now)
+            if (letztesBlacklistUpdate.AddMinutes(3) < DateTime.Now)
             {
                 fehler = UpdateBlacklist();
             }
@@ -109,7 +109,7 @@ namespace Silbernetz.Actions
             try
             {
                 //Wird Einmal am Tag ausgeführt.
-                if(letztesAufräumen.AddDays(1) > DateTime.Today.AddHours(5))
+                if(letztesAufräumen.AddDays(1) < DateTime.Today.AddHours(5))
                 {
                     database.AnrufCleanUp();
                     letztesAufräumen = DateTime.Today;
