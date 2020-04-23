@@ -243,7 +243,7 @@ namespace Silbernetz.Database
         {
             using (saveLock.Read())
             {
-                foreach (Anruf itm in Save.Where(a => a.TimeStamp < DateTime.Today && !a.TelNummer.EndsWith("XXX")))
+                foreach (Anruf itm in Save.Where(a => a.TimeStamp < DateTime.Today && a.TelNummer != null && a.TelNummer.Length > 3 && !a.TelNummer.EndsWith("XXX")))
                 {
                     itm.TelNummer = itm.TelNummer.Remove(itm.TelNummer.Length - 3, 3) + "XXX";
                 }

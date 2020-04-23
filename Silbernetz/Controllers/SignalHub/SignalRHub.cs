@@ -44,6 +44,15 @@ namespace Silbernetz.Controllers.SignalHub
         [Authorize]
         public void AddToBlackList(string nr, string description)
         {
+            if (string.IsNullOrEmpty(nr))
+            {
+                throw new Exception("Telefonnummer darf nicht null sein");
+            }
+            if (string.IsNullOrEmpty(description))
+            {
+                throw new Exception("description darf nicht null sein");
+            }
+            Console.WriteLine("Setze Blacklist " + nr.Remove(nr.Length - 3, 3) + "XXX");
             blsave.Add(nr, description);
             database.UpdateBlacklist();
         }
