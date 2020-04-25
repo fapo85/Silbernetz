@@ -84,16 +84,23 @@ export class SignalRService{
   public GetAnruferHeute(): Observable<Anrufer[]> {
     if (!this.anruferHeute){
       this.anruferHeute = new BehaviorSubject<Anrufer[]>([]);
-      this.HoleAnruferHeute();
     }
+    this.HoleAnruferHeute();
     return this.anruferHeute;
+  }
+  private HoleBlacklist(sub: Subject<BLIDatum[]>){
+    if (this.hubConnection.state !== signalR.HubConnectionState.Connected){
+      setTimeout(() => this.HoleBlacklist(sub), 20);
+    }else{
+      this.hubConnection.invoke('GetBlackList').then((data: BLIDatum[]) => {
+        data.forEach(itm => itm.created = new Date(itm.created));
+        sub.next(data);
+      });
+    }
   }
   public GetBlacklist(): Observable<BLIDatum[]> {
     const sub = new Subject<BLIDatum[]>();
-    this.hubConnection.invoke('GetBlackList').then((data: BLIDatum[]) =>{
-      data.forEach(itm => itm.created = new Date(itm.created));
-      sub.next(data);
-    });
+    this.HoleBlacklist(sub);
     return sub;
   }
   public AddBlacklistEntry(telnr: string, kommentar: string): Subject<boolean> {
