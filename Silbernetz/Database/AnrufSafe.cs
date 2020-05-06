@@ -179,12 +179,14 @@ namespace Silbernetz.Database
             using (var lockob = saveLock.ReadThanWrite())
             {
                 var SaveList = Save.Where(s => s.lauftnoch == false).ToList();
-                List<Datum> EvnToAdd = new List<Datum>(evn.Response.Data.Where(evn => SaveList.Where(sl => sl.TelNummer.Replace("X", "").StartsWith(evn.Caller.Replace("X", ""))).FirstOrDefault() == null));
+                //List<Datum> EvnToAdd = new List<Datum>(evn.Response.Data.Where(evn => SaveList.Where(sl => sl.TelNummer.Replace("X", "").StartsWith(evn.Caller.Replace("X", ""))).FirstOrDefault() == null));
+                //Neu Hinzugefügte aus env eintragen
+                List<Datum> EvnToAdd = new List<Datum>(evn.Response.Data.Where(evn => SaveList.SingleOrDefault(sl => sl.id == evn.Id || (sl.lauftnoch == true && sl.TelNummer.StartsWith(evn.Caller.Replace("X", "")))) == null));
                 //Ab Hier in Save Schreiben
                 lockob.UpgradeToWriterLock();
                 foreach (Datum itm in EvnToAdd)
                 {
-                    Anruf anruf = Save.SingleOrDefault(so => so.id == itm.Id);
+                    Anruf anruf = Save.SingleOrDefault(sl => sl.id == itm.Id || (sl.lauftnoch == true && sl.TelNummer.StartsWith(itm.Caller.Replace("X", ""))));
                     if (anruf == null)
                     {
                         anruf = new Anruf();
