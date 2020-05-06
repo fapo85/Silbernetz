@@ -1,8 +1,22 @@
 <div class="ui middle aligned selection divided list">
   <div class="content item" *ngFor="let anrufer of Data">
     <div class="header">{{anrufer.telnummer}}
-      <a (click)="addBlackList(anrufer.telnummer)"><i class="icon trash right"></i></a></div>
-  <div class="description righ">Anrufe: {{ anrufer.anzahl }} Dauer: {{ CalcGesamtDauer(anrufer.gesamtdauer) }}</div>
+      <a (click)="addBlackList(anrufer)"><i class="icon trash right"></i></a></div>
+  <div class="description righ" (click)="ShowDetails(anrufer)">
+    <strong>Heute </strong>Anrufe: {{ anrufer.anzahl }} Dauer: {{ CalcGesamtDauer(anrufer.gesamtdauer) }}<br>
+    <strong>3Tage </strong> Anrufe: {{ anrufer.anzahldays }} Dauer: {{ CalcGesamtDauer(anrufer.gesamtdauerdays) }}
+    </div>
   </div>
 </div>
+<hr *ngIf="EintragSperrenOpen || EintragDetailsOpen">
 <sn-add-black-entry *ngIf="EintragSperrenOpen" [telnr]="EintragSperrenTel" (formclose)="addBlackListClose($event)"></sn-add-black-entry>
+<div *ngIf="EintragDetailsOpen">
+  <h4>Details:</h4>
+    <strong>Heute </strong>Anrufe: {{ EintragDetailsItm.anzahl }} Dauer: {{ CalcGesamtDauer(EintragDetailsItm.gesamtdauer) }}<br>
+    <strong>3Tage </strong> Anrufe: {{ EintragDetailsItm.anzahldays }} Dauer: {{ CalcGesamtDauer(EintragDetailsItm.gesamtdauerdays) }}
+    <ul>
+      <li *ngFor="let detail of EintragDetailsItm.anrufe">
+        {{detail.timestamp.toLocaleString()}}Uhr -> Dauer: {{CalcGesamtDauer(detail.inbound)}}
+      </li>
+    </ul>
+</div>

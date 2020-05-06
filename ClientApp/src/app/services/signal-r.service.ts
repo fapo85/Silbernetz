@@ -8,6 +8,7 @@ import { Anrufer } from '../Models/anrufer';
 import { AnrufExport } from '../Models/anruf-export';
 import { WaitTimeProp } from '../Models/wait-time-prop';
 import { BLIDatum } from '../Models/blidatum';
+import { ifStmt, importType } from '@angular/compiler/src/output/output_ast';
 
 @Injectable({
   providedIn: 'root'
@@ -93,7 +94,10 @@ export class SignalRService{
       setTimeout(() => this.HoleBlacklist(sub), 20);
     }else{
       this.hubConnection.invoke('GetBlackList').then((data: BLIDatum[]) => {
-        data.forEach(itm => itm.created = new Date(itm.created));
+        data.forEach(itm => {
+          itm.created = new Date(itm.created);
+          itm.locked_up = new Date(itm.locked_up);
+        });
         sub.next(data);
       });
     }

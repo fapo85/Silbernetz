@@ -10,6 +10,7 @@ using System.Data;
 using System.Linq;
 using System.Net;
 using System.Net.Mail;
+using System.Text.Json;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
@@ -141,19 +142,25 @@ namespace Silbernetz.Database
             Dictionary<string, Anrufer> ret = new Dictionary<string, Anrufer>();
             using (saveLock.Read())
             {
-                foreach (Anruf itm in Save.Where(a => a.TimeStamp > DateTime.Today))
+                foreach (Anruf itm in Save.Where(a => a.TimeStamp > DateTime.Today.AddDays(-2)))
                 {
-                    Anrufer anrufer;
-                    if (!ret.TryGetValue(itm.TelNummer, out anrufer))
+                    if (itm?.TelNummer != null)
                     {
-                        anrufer = new Anrufer();
-                        anrufer.TelNummer = itm.TelNummer;
-                        ret.Add(itm.TelNummer, anrufer);
+                        Anrufer anrufer;
+                        if (!ret.TryGetValue(itm.TelNummer, out anrufer))
+                        {
+                            anrufer = new Anrufer();
+                            anrufer.TelNummer = itm.TelNummer;
+                            ret.Add(itm.TelNummer, anrufer);
+                        }
+                        anrufer.Anrufe.Add(itm);
+                    }else{
+                        Console.WriteLine("Anrufer?.Telnummer == null \n"
+                            + JsonSerializer.Serialize(itm));
                     }
-                    anrufer.Anrufe.Add(itm);
                 }
             }
-            return ret.Values;
+            return ret.Values.Where(ae => ae.GesamtDauer > 0);
         }
 
         internal Task NewDataToAdd(LiveData liveData, Evn evn, LiveCalls liveCalls, DateTime letzteFehlerfreieAktualisierung)

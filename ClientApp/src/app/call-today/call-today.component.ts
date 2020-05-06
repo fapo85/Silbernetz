@@ -12,7 +12,9 @@ export class CallTodayComponent implements OnInit, OnDestroy {
   subscription: Subscription;
   Data: Anrufer[] = [];
   EintragSperrenOpen: boolean = false;
+  EintragDetailsOpen: boolean = false;
   EintragSperrenTel: string;
+  EintragDetailsItm: Anrufer;
   constructor(private signal: SignalRService) { }
 
   ngOnDestroy(): void {
@@ -34,11 +36,19 @@ export class CallTodayComponent implements OnInit, OnDestroy {
     ret += ' Sekunden';
     return ret;
   }
-  addBlackList(telnr: string){
-    this.EintragSperrenTel = telnr;
+  addBlackList(anrufer: Anrufer){
+    this.EintragSperrenTel = anrufer.telnummer.toString();
     this.EintragSperrenOpen = true;
+    this.EintragDetailsItm = anrufer;
+    this.EintragDetailsOpen = true;
   }
   addBlackListClose(evt: any){
     this.EintragSperrenOpen = false;
+  }
+  ShowDetails(anrufer: Anrufer){
+    this.EintragDetailsItm = anrufer;
+    this.EintragDetailsOpen = true;
+    this.EintragSperrenOpen = false;
+    this.EintragSperrenTel = null;
   }
 }

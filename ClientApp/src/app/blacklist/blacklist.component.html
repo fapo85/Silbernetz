@@ -3,7 +3,8 @@
     <div class="header">{{anrufer.caller}}
       <!--<a (click)="addBlackList(anrufer.caller)"><i class="icon trash right"></i></a></div>-->
   <div class="description righ">
-    <p>Versuche: {{ anrufer.count_try }} Dauer: {{ anrufer.locked_up }}</p>
+    <p>Versuche: {{ anrufer.count_try }}</p>
+    <p>Geblockt: {{anrufer.created.toLocaleString()}}Uhr bis: {{ anrufer.locked_up.toLocaleString() }}Uhr</p>
     <p>{{ anrufer.description }}</p>
   </div>
   </div>

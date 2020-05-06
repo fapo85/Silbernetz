@@ -4,7 +4,7 @@ export class BLIDatum {
   description: string;
   own_id: string;
   block: boolean;
-  locked_up: string;
+  locked_up: Date;
   count_try: number;
   modified: string;
   created: Date;

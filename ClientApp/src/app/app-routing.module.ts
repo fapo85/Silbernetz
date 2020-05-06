@@ -12,6 +12,8 @@ const routes: Routes = [
   { path: 'dashboard', component: DashboardComponent },
   { path: 'calltoday', component: CallTodayComponent, canActivate: [MsalGuard] },
   { path: 'blacklist', component: BlacklistComponent, canActivate: [MsalGuard] },
+  /*{ path: 'calltoday', component: CallTodayComponent},
+  { path: 'blacklist', component: BlacklistComponent},*/
   {path: 'hub', redirectTo: 'http://localhost:5000/hub'}
 ];
 

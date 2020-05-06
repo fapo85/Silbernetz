@@ -11,17 +11,34 @@ namespace Silbernetz.Models
     {
         [JsonPropertyName("telnummer")]
         public string TelNummer { get; set; }
+        [JsonPropertyName("anzahldays")]
+        public int Anzahl3Days {
+            get {
+                return Anrufe.Count;
+            }
+        }
         [JsonPropertyName("anzahl")]
         public int Anzahl {
             get {
-                return Anrufe.Count;
+                return Anrufe.Where(ae => ae.TimeStamp > DateTime.Today).Count();
             }
         }
         [JsonPropertyName("gesamtdauer")]
         public ulong GesamtDauer {
             get {
                 ulong dauer = 0;
-                foreach(Anruf ae in Anrufe)
+                foreach (Anruf ae in Anrufe.Where(ae => ae.TimeStamp > DateTime.Today))
+                {
+                    dauer += ae.OutBound;
+                }
+                return dauer;
+            }
+        }
+        [JsonPropertyName("gesamtdauerdays")]
+        public ulong GesamtDauer3Days {
+            get {
+                ulong dauer = 0;
+                foreach (Anruf ae in Anrufe)
                 {
                     dauer += ae.OutBound;
                 }
