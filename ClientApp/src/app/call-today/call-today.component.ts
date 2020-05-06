@@ -46,6 +46,7 @@ export class CallTodayComponent implements OnInit, OnDestroy {
     this.EintragSperrenOpen = false;
   }
   ShowDetails(anrufer: Anrufer){
+    console.log(anrufer);
     this.EintragDetailsItm = anrufer;
     this.EintragDetailsOpen = true;
     this.EintragSperrenOpen = false;

@@ -16,7 +16,7 @@
     <strong>3Tage </strong> Anrufe: {{ EintragDetailsItm.anzahldays }} Dauer: {{ CalcGesamtDauer(EintragDetailsItm.gesamtdauerdays) }}
     <ul>
       <li *ngFor="let detail of EintragDetailsItm.anrufe">
-        {{detail.timestamp.toLocaleString()}}Uhr -> Dauer: {{CalcGesamtDauer(detail.inbound)}}
+        {{detail.timestamp.toLocaleString()}}Uhr -> Dauer Ab Anruf: {{CalcGesamtDauer(detail.inbound)}} Gesrpächszeit: {{CalcGesamtDauer(detail.outbound)}}
       </li>
     </ul>
 </div>

@@ -27,7 +27,7 @@ namespace Silbernetz.Controllers.SignalHub
             Clients.Caller.SendAsync("manystats", database.AnrufStatisitk(DateTime.Today.AddDays(-7))).Wait();
             return base.OnConnectedAsync();
         }
-        [Authorize]
+        //[Authorize]
         public IEnumerable<Anrufer> AnrufFromToday()
         {
             return database.AnrufFromToday();
@@ -36,7 +36,7 @@ namespace Silbernetz.Controllers.SignalHub
         {
             return database.AnrufStatisitk(DateTime.Now.AddDays(-1 * tage));
         }
-        [Authorize]
+        //[Authorize]
         public IEnumerable<BLIDatum> GetBlackList()
         {
             return blsave.GetList();
