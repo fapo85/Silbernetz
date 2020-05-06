@@ -13,8 +13,20 @@ namespace Silbernetz.Models
         /// </summary>
         [JsonPropertyName("id")]
         public ulong id { get; set; }
+        private string tel;
         [JsonPropertyName("telnummer")]
-        public string TelNummer { get; set; }
+        public string TelNummer {
+            get {
+                if (string.IsNullOrEmpty(tel))
+                {
+                    return "Unbekannt";
+                }
+                return tel;
+            }
+            set {
+                tel = value;
+            }
+        }
         [JsonPropertyName("service")]
         public string Service { get; set; }
         [JsonPropertyName("timestamp")]
@@ -26,7 +38,7 @@ namespace Silbernetz.Models
         [JsonPropertyName("wait")]
         public ulong Wait {
             get {
-                if(InBound <= OutBound)
+                if (InBound <= OutBound)
                 {
                     return 0;
                 }
@@ -40,7 +52,7 @@ namespace Silbernetz.Models
         public void DataFromEvn(Datum evn)
         {
             id = evn.Id;
-            if (string.IsNullOrEmpty(TelNummer))
+            if (string.IsNullOrEmpty(tel))
             {
                 TelNummer = evn.Caller;
             }

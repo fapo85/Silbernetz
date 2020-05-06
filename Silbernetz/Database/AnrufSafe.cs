@@ -90,7 +90,7 @@ namespace Silbernetz.Database
                             anzahl++;
                         }
                     }
-                    if(anzahl > 0)
+                    if (anzahl > 0)
                     {
                         Wartezeit = (ulong)(WarteSekunden / anzahl);
                     }
@@ -144,20 +144,14 @@ namespace Silbernetz.Database
             {
                 foreach (Anruf itm in Save.Where(a => a.TimeStamp > DateTime.Today.AddDays(-2)))
                 {
-                    if (itm?.TelNummer != null)
+                    Anrufer anrufer;
+                    if (!ret.TryGetValue(itm.TelNummer, out anrufer))
                     {
-                        Anrufer anrufer;
-                        if (!ret.TryGetValue(itm.TelNummer, out anrufer))
-                        {
-                            anrufer = new Anrufer();
-                            anrufer.TelNummer = itm.TelNummer;
-                            ret.Add(itm.TelNummer, anrufer);
-                        }
-                        anrufer.Anrufe.Add(itm);
-                    }else{
-                        Console.WriteLine("Anrufer?.Telnummer == null \n"
-                            + JsonSerializer.Serialize(itm));
+                        anrufer = new Anrufer();
+                        anrufer.TelNummer = itm.TelNummer;
+                        ret.Add(itm.TelNummer, anrufer);
                     }
+                    anrufer.Anrufe.Add(itm);
                 }
             }
             return ret.Values.Where(ae => ae.GesamtDauer > 0);
@@ -185,7 +179,7 @@ namespace Silbernetz.Database
             using (var lockob = saveLock.ReadThanWrite())
             {
                 var SaveList = Save.Where(s => s.lauftnoch == false).ToList();
-                List<Datum> EvnToAdd = new List<Datum>(evn.Response.Data.Where(evn => SaveList.Where(sl => sl.id == evn.Id).SingleOrDefault() == null));
+                List<Datum> EvnToAdd = new List<Datum>(evn.Response.Data.Where(evn => SaveList.Where(sl => sl.TelNummer.Replace("X", "").StartsWith(evn.Caller.Replace("X", ""))).FirstOrDefault() == null));
                 //Ab Hier in Save Schreiben
                 lockob.UpgradeToWriterLock();
                 foreach (Datum itm in EvnToAdd)
