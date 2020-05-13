@@ -32,6 +32,7 @@ export class DashboardComponent implements AfterViewInit, OnDestroy {
 
   ngAfterViewInit(): void {
     this.Nowsubscription = this.signal.neusteSub.subscribe((status: Stats) => {
+      console.log('dashboard', status);
       // Aktuell Am telefon:
       this.AktuellAmTelefonNR = status.amtelefon;
       if (status.amtelefon < (status.angemeldet / 5)) {
