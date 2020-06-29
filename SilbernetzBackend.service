@@ -1,0 +1,14 @@
+[Unit]
+Description=Silbernetz Backend
+
+[Service]
+WorkingDirectory=/home/fapo/Silbernetz/Silbernetz
+ExecStart=/usr/bin/dotnet /home/fapo/Silbernetz/Silbernetz/bin/Release/netcoreapp3.1/Silbernetz.dll
+Restart=always
+RestartSec=10
+SyslogIdentifier=SilbernetzBackend
+User=fapo
+
+[Install]
+WantedBy=multi-user.target
+
