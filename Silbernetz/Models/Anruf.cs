@@ -56,7 +56,11 @@ namespace Silbernetz.Models
             {
                 TelNummer = evn.Caller;
             }
-            Service = evn.Service;
+
+            if (string.IsNullOrEmpty(Service)) {
+                Service = evn.Service;
+            }
+            //Service = evn.Service;
             TimeStamp = DateTime.Parse(evn.Created);
             InBound = evn.Duration.Inbound;
             OutBound = evn.Duration.Outbound;
@@ -73,6 +77,7 @@ namespace Silbernetz.Models
             TelNummer = itm.Caller;
             OutBound = (uint)itm.Duration;
             Target = itm.Destination;
+            Service = itm.Service;
             lauftnoch = true;
             TimeStamp = DateTime.Parse(itm.Created);
         }

@@ -13,12 +13,18 @@ namespace Silbernetz.Models.Api
 
     }
 
-    public partial class ResponseEvn
-    {
+    public partial class ResponseEvn {
         [JsonPropertyName("count")]
         public long Count { get; set; }
 
         [JsonPropertyName("data")]
         public Datum[] Data { get; set; }
+    }
+    public partial class ResponseGroup {
+        [JsonPropertyName("count")]
+        public long Count { get; set; }
+
+        [JsonPropertyName("data")]
+        public GroupDatum[] Data { get; set; }
     }
 }

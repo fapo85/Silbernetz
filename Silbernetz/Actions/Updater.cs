@@ -13,6 +13,7 @@ namespace Silbernetz.Actions
         private readonly InoplaClient inoplaClient;
         private readonly AnrufSafe database;
         private readonly BlackListSave blsave;
+        private readonly GroupSave groupSave;
         private readonly Task runnner;
         private DateTime letzteFehlerfreieAktualisierung = DateTime.MinValue;
         private DateTime letztesAufräumen = DateTime.MinValue;
@@ -20,7 +21,7 @@ namespace Silbernetz.Actions
         private static bool OnlyOneInstanceCounter = false;
         //Es Wird immer Mindestens so Lange gewartet bis ein Arbeitsschritt abgeschlossen ist.
         private static readonly TimeSpan SchlafensZeit = TimeSpan.FromSeconds(15);
-        public Updater(InoplaClient inoplaClient, AnrufSafe database, BlackListSave blsave)
+        public Updater(InoplaClient inoplaClient, AnrufSafe database, BlackListSave blsave, GroupSave groupSave)
         {
             if (OnlyOneInstanceCounter)
             {
@@ -30,6 +31,7 @@ namespace Silbernetz.Actions
             this.inoplaClient = inoplaClient;
             this.database = database;
             this.blsave = blsave;
+            this.groupSave = groupSave;
             runnner = new Task(()=> Schleife());
             runnner.Start();
         }
@@ -89,9 +91,12 @@ namespace Silbernetz.Actions
                 fehler = true;
                 Console.WriteLine("Updater: Fehler Beim Holen der EVN Daten: " + e.Message);
             }
+            // Update Gruppen
+            fehler = fehler | groupSave.Update();
+            //Update Blacklist
             if (letztesBlacklistUpdate.AddMinutes(3) < DateTime.Now)
             {
-                fehler = UpdateBlacklist();
+                fehler = fehler | UpdateBlacklist();
             }
             try
             {
@@ -99,7 +104,7 @@ namespace Silbernetz.Actions
                 {
                     letzteFehlerfreieAktualisierung = DateTime.Now;
                 }
-                database.NewDataToAdd(liveData, evn, liveCalls, letzteFehlerfreieAktualisierung);
+                database.NewDataToAdd(groupSave.Filter(liveData), evn, liveCalls, letzteFehlerfreieAktualisierung);
             }
             catch (Exception e)
             {

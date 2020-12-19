@@ -30,6 +30,7 @@ namespace Silbernetz
             services.AddOptions();
             services.Configure<InoplaConf>(Configuration.GetSection(nameof(InoplaConf)));
             services.AddSingleton<InoplaClient>();
+            services.AddSingleton<GroupSave>();
             services.AddSingleton<BlackListSave>();
             services.AddSingleton<AnrufSafe>();
             AzureActiveDirectory AADConfig = Configuration.GetSection(nameof(AzureActiveDirectory)).Get<AzureActiveDirectory>();

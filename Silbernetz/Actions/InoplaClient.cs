@@ -5,6 +5,7 @@ using Silbernetz.Models;
 using Silbernetz.Models.Api;
 using Silbernetz.Models.Conf;
 using System;
+using System.Collections.Generic;
 using System.Net.Http;
 using System.Text;
 using System.Text.Json;
@@ -17,6 +18,7 @@ namespace Silbernetz.Actions
         private readonly string ApiId;
         private readonly string ApiKey;
         private readonly IHubContext<SignalRHub> hubContext;
+        private readonly int[] groups = { 2072, 2823, 2826 };
         public InoplaClient(IOptions<InoplaConf> Secrets, IHubContext<SignalRHub> hubContext)
         {
             InoplaConf secrets = Secrets.Value;
@@ -30,7 +32,15 @@ namespace Silbernetz.Actions
         public async Task<LiveData> GetLiveDataAsync() => await GetAsync<LiveData>(ApiUrl("Live/SIP"));
         public async Task<LiveCalls> GetLiveCallsAsync() => await GetAsync<LiveCalls>(ApiUrl("Live/Calls"));
         public async Task<BlackListItems> GetBlackAsync() => await GetAsync<BlackListItems>(ApiUrl("Lists/Callerlists/1407/Items"));
+        public async Task<SipGroups> GetGroupMembersAsync(int groupid) => await GetAsync<SipGroups>(ApiUrl($"SIP/Groups/{groupid}/Members"));
 
+        public async Task<Dictionary<int, SipGroups>> GetGroupMembersAsync() {
+            Dictionary<int, SipGroups> ret = new Dictionary<int, SipGroups>();
+            foreach(int group in groups) {
+                ret.Add(group, await GetGroupMembersAsync(group));
+            }
+            return ret;
+        }
         internal async void AddToBlackList(BLAction action)
         {
             using (HttpClient client = new HttpClient())

@@ -19,7 +19,7 @@ namespace Silbernetz.Database
         {
             this.hubContext = hubContext;
             this.inoplaClient = inoplaClient;
-            new BLAction("344254363546", "test");
+            //new BLAction("344254363546", "test");
         }
         internal void RenewBlackList(BlackListItems result)
         {
