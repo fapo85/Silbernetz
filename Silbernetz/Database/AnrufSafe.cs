@@ -45,7 +45,7 @@ namespace Silbernetz.Database {
                 while (weiter) {
                     Evn evn = await inoplaClient.GetEVNDataAsync(skip);
                     foreach (var revn in evn.Response.Data) {
-                        if (InErlaubtenServies(revn.Service)){
+                        if (InErlaubtenServies(revn.Service)) {
                             Anruf anruf = new Anruf();
                             anruf.DataFromEvn(revn);
                             Save.Add(anruf);
@@ -63,7 +63,7 @@ namespace Silbernetz.Database {
         }
 
         private bool InErlaubtenServies(string service) {
-            foreach(string str in ErlaubteServices) {
+            foreach (string str in ErlaubteServices) {
                 if (service.StartsWith(str)) {
                     return true;
                 }
@@ -76,6 +76,9 @@ namespace Silbernetz.Database {
         }
 
         internal void UpdateStatistik() {
+            if (saveLock == null) {
+                return;
+            }
             using (saveLock.Write()) {
                 DateTime last = WaitTimeSave.LastOrDefault() == null ? NextHour(Save.First().TimeStamp) : NextHour(WaitTimeSave.Last().TimeStamp);
                 ulong Wartezeit = 0;
@@ -109,6 +112,12 @@ namespace Silbernetz.Database {
 
 
         public WaitTimeProp WaitTimeNow() {
+            if (saveLock == null) {
+                return new WaitTimeProp() {
+                    TimeStamp = DateTime.Now,
+                    WaitTime = 0
+                };
+            }
             using (saveLock.Read()) {
                 ulong WarteSekunden = 0;
                 ulong anzahl = 0;
@@ -131,21 +140,26 @@ namespace Silbernetz.Database {
         }
         public IEnumerable<Anrufer> AnrufFromToday() {
             Dictionary<string, Anrufer> ret = new Dictionary<string, Anrufer>();
-            using (saveLock.Read()) {
-                foreach (Anruf itm in Save.Where(a => a.TimeStamp > DateTime.Today.AddDays(-2))) {
-                    Anrufer anrufer;
-                    if (!ret.TryGetValue(itm.TelNummer, out anrufer)) {
-                        anrufer = new Anrufer();
-                        anrufer.TelNummer = itm.TelNummer;
-                        ret.Add(itm.TelNummer, anrufer);
+            if (saveLock != null) {
+                using (saveLock.Read()) {
+                    foreach (Anruf itm in Save.Where(a => a.TimeStamp > DateTime.Today.AddDays(-2))) {
+                        Anrufer anrufer;
+                        if (!ret.TryGetValue(itm.TelNummer, out anrufer)) {
+                            anrufer = new Anrufer();
+                            anrufer.TelNummer = itm.TelNummer;
+                            ret.Add(itm.TelNummer, anrufer);
+                        }
+                        anrufer.Anrufe.Add(itm);
                     }
-                    anrufer.Anrufe.Add(itm);
                 }
             }
             return ret.Values.Where(ae => ae.GesamtDauer > 0);
         }
 
         internal Task NewDataToAdd(LiveData liveData, Evn evn, LiveCalls liveCalls, DateTime letzteFehlerfreieAktualisierung) {
+            if (saveLock == null) {
+                return Task.CompletedTask;
+            }
             //Aktualisiere Live Data
             LiveData oldValues = AktuelleStats;
             bool forcerenew = false;
@@ -198,16 +212,22 @@ namespace Silbernetz.Database {
 
         public IEnumerable<WaitTimeProp> AnrufStatisitk(DateTime after) {
             List<WaitTimeProp> ret = new List<WaitTimeProp>();
-            Task<WaitTimeProp> TaskToNow = new Task<WaitTimeProp>(() => WaitTimeNow());
-            TaskToNow.Start();
-            using (saveLock.Read()) {
-                ret.AddRange(WaitTimeSave);
+            if (saveLock != null) {
+                Task<WaitTimeProp> TaskToNow = new Task<WaitTimeProp>(() => WaitTimeNow());
+                TaskToNow.Start();
+                using (saveLock.Read()) {
+                    ret.AddRange(WaitTimeSave);
+                }
+                ret.Add(TaskToNow.Result);
             }
-            ret.Add(TaskToNow.Result);
             return ret;
 
         }
         public Stats GetStatsNow() {
+            if (AktuelleStats == null)
+            {
+                return new Stats();
+            }
             return Stats.FromLiveData(AktuelleStats, WaitTimeNow().WaitTime, AktuelleStats.TimeStamp);
         }
         public void AnrufCleanUp() {
@@ -216,20 +236,28 @@ namespace Silbernetz.Database {
             WaitTimeSaveDelold();
         }
         private void AnrufMakeAnonymous() {
-            using (saveLock.Read()) {
-                foreach (Anruf itm in Save.Where(a => a.TimeStamp < DateTime.Today && a.TelNummer != null && a.TelNummer.Length > 3 && !a.TelNummer.EndsWith("XXX"))) {
-                    itm.TelNummer = itm.TelNummer.Remove(itm.TelNummer.Length - 3, 3) + "XXX";
+            if (saveLock != null) {
+                using (saveLock.Read()) {
+                    foreach (Anruf itm in Save.Where(a =>
+                        a.TimeStamp < DateTime.Today && a.TelNummer != null && a.TelNummer.Length > 3 &&
+                        !a.TelNummer.EndsWith("XXX"))) {
+                        itm.TelNummer = itm.TelNummer.Remove(itm.TelNummer.Length - 3, 3) + "XXX";
+                    }
                 }
             }
         }
         private void AnrufDelOld() {
-            using (saveLock.Write()) {
-                Save.RemoveWhere(a => a.TimeStamp < DateTime.Today.AddDays(-1 * TAGEHOLEN));
+            if (saveLock != null) {
+                using (saveLock.Write()) {
+                    Save.RemoveWhere(a => a.TimeStamp < DateTime.Today.AddDays(-1 * TAGEHOLEN));
+                }
             }
         }
         private void WaitTimeSaveDelold() {
-            using (saveLock.Write()) {
-                WaitTimeSave.RemoveWhere(a => a.TimeStamp < DateTime.Today.AddDays(-1 * TAGEHOLEN));
+            if (saveLock != null) {
+                using (saveLock.Write()) {
+                    WaitTimeSave.RemoveWhere(a => a.TimeStamp < DateTime.Today.AddDays(-1 * TAGEHOLEN));
+                }
             }
         }
         private Task CheckForUpdate(LiveData oldData, LiveData newData, bool forcerenew, DateTime zeitpunkt) {
